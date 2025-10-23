@@ -1,75 +1,43 @@
-# ====================================
-# 🐍 Python / Nexum Infra .gitignore
-# ====================================
-
-# --- Entornos virtuales ---
+# Entornos virtuales
 env/
 venv/
-.venv/
-*/env/
-*/venv/
-*/.venv/
-
-# --- Archivos compilados ---
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyo
+*.pyd
+*.db
+*.sqlite3
 
-# --- Archivos de entorno y configuración local ---
+# Archivos de entorno
 *.env
-*.local
-.env.*
-secrets.json
+.env
 
-# --- Archivos temporales / logs ---
+# Archivos de configuración local
 *.log
+*.vs
+.vscode/
+.idea/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
 *.tmp
 *.bak
 *.swp
-*.swo
-*.DS_Store
-Thumbs.db
-
-# --- Archivos de datos grandes ---
 *.zip
 *.rar
-*.7z
-*.tar
-*.gz
-*.bak
-*.dll
+
+# Archivos de Jupyter o datos
+*.ipynb_checkpoints
+*.csv
+*.xlsx
+*.xls
+
+# LFS si lo usas
 *.exe
+*.dll
+*.bin
 *.iso
 
-# --- Archivos del sistema operativo ---
-desktop.ini
-ehthumbs.db
-Icon?
-.DS_Store
-
-# --- Librerías instaladas ---
-*/Lib/
-*/Include/
-*/Scripts/
-*/site-packages/
-
-# --- Archivos de Jupyter ---
-.ipynb_checkpoints
-*.ipynb
-
-# --- Archivos de cache y build ---
-build/
-dist/
-*.egg-info/
-.eggs/
-*.manifest
-*.spec
-
-# --- IDEs ---
-.vscode/
-.idea/
-*.iml
-
-# --- Otros ---
-*.db
-*.sqlite3
