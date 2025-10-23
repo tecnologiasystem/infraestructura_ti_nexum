@@ -1,0 +1,24 @@
+.campanas-container {
+  padding: 24px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.campanas-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #000F9F;
+}
+
+.campanas-description {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.campanas-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}

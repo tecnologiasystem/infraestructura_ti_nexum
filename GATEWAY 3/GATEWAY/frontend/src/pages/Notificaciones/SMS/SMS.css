@@ -1,0 +1,29 @@
+.sms-container {
+    padding: 24px;
+  }
+  
+  .sms-titulo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    font-weight: bold;
+    color: #000F9F;
+    margin-bottom: 4px;
+  }
+  
+  .sms-descripcion {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+  }
+  
+  .sms-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sms-acciones {
+    margin-top: 20px;
+    text-align: center;
+  }
+  

@@ -1,0 +1,526 @@
+/* ====== RPA VIGILANCIA - MODERN DESIGN ====== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ====== BRAND COLORS & TOKENS ====== */
+:root {
+  /* Brand colors */
+  --brand-orange: #b86e00;
+  --brand-blue: #36A2DA;
+  --brand-green: #90BC1F;
+  --brand-purple: #662480;
+  --brand-navy: #000F9F;
+  
+  /* Derived colors */
+  --orange-light: #FFC670;
+  --blue-light: #6CCBF8;
+  --green-light: #BFE164;
+  --purple-light: #9E63C4;
+  --navy-light: #5460FF;
+  
+  /* Surface colors */
+  --surface-white: #ffffff;
+  --surface-gray-50: #f8fafc;
+  --surface-gray-100: #f1f5f9;
+  --surface-gray-200: #e2e8f0;
+  --surface-gray-300: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  /* Glass effects */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  
+  /* Modern effects */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --shadow-strong: 0 16px 60px rgba(0, 0, 0, 0.16);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ====== PAGE CONTAINER ====== */
+.rpa-vigilancia-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--surface-gray-50) 0%, var(--surface-white) 100%);
+  position: relative;
+  padding: 2rem;
+}
+
+/* Subtle background pattern */
+.rpa-vigilancia-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(600px circle at 20% 10%, rgba(238, 141, 0, 0.04), transparent 50%),
+    radial-gradient(800px circle at 80% 20%, rgba(54, 162, 218, 0.04), transparent 50%),
+    radial-gradient(400px circle at 40% 80%, rgba(144, 188, 31, 0.03), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ====== MAIN CONTENT CARD ====== */
+.rpa-main-card {
+  position: relative;
+  z-index: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.rpa-main-card:hover {
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-2px);
+}
+
+/* ====== HEADER SECTION ====== */
+.rpa-header {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-purple) 100%);
+  color: white;
+  padding: 1rem 3rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.rpa-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+
+.excel-tittle {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  color: white;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.excel-description {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 600px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ====== ACTION BUTTONS ====== */
+.rpa-actions {
+  display: flex; 
+  padding: 1rem 3rem;
+  background: var(--surface-white);
+  border-bottom: 1px solid var(--surface-gray-200);
+}
+
+.rpa-button-group {
+  margin-left: auto; 
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.rpa-btn-primary {
+  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--orange-light) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  box-shadow: 0 4px 16px rgba(238, 141, 0, 0.3);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.rpa-btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.rpa-btn-primary:hover::before {
+  opacity: 1;
+}
+
+.rpa-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(238, 141, 0, 0.4);
+}
+
+.rpa-btn-secondary {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  box-shadow: 0 4px 16px rgba(54, 162, 218, 0.3);
+  transition: var(--transition);
+}
+
+.rpa-btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(54, 162, 218, 0.4);
+}
+
+/* ====== PROGRESS SECTION ====== */
+.rpa-progress-section {
+  padding: 1rem;
+  background: var(--surface-white);
+}
+
+.progress-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--surface-gray-100);
+}
+
+.progress-title {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-purple) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ====== MODERN TABLE STYLES ====== */
+.rpa-table {
+  background: var(--surface-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--surface-gray-200);
+}
+
+/* Table header styling */
+.rpa-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, var(--surface-gray-50) 0%, var(--surface-white) 100%);
+  border-bottom: 2px solid var(--surface-gray-200);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Table row styling */
+.rpa-table .ant-table-tbody > tr {
+  transition: var(--transition);
+}
+
+.rpa-table .ant-table-tbody > tr:hover {
+  background: linear-gradient(135deg, rgba(238, 141, 0, 0.03) 0%, rgba(54, 162, 218, 0.03) 100%);
+  transform: scale(1.001);
+}
+
+.rpa-table .ant-table-tbody > tr > td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-gray-100);
+  color: var(--text-secondary);
+}
+
+/* ====== PROGRESS BAR STYLING ====== */
+.rpa-progress-bar .ant-progress-bg {
+  background: linear-gradient(90deg, var(--brand-green) 0%, var(--green-light) 100%);
+  border-radius: 4px;
+}
+
+.rpa-progress-bar .ant-progress-outer {
+  background: var(--surface-gray-200);
+  border-radius: 4px;
+}
+
+.rpa-progress-bar .ant-progress-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ====== ACTION BUTTONS IN TABLE ====== */
+.rpa-action-btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: var(--transition);
+  border: none;
+  height: auto;
+  padding: 0.5rem 1rem;
+}
+
+.rpa-action-btn.refresh {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(54, 162, 218, 0.3);
+}
+
+.rpa-action-btn.pause {
+  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--orange-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(238, 141, 0, 0.3);
+}
+
+.rpa-action-btn.resume {
+  background: linear-gradient(135deg, var(--brand-green) 0%, var(--green-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(144, 188, 31, 0.3);
+}
+
+.rpa-action-btn.detail {
+  background: linear-gradient(135deg, var(--brand-purple) 0%, var(--purple-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 36, 128, 0.3);
+}
+
+.rpa-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* ====== MODAL STYLING ====== */
+.rpa-modal .ant-modal-content {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-strong);
+  border: 1px solid var(--surface-gray-200);
+}
+
+.rpa-modal .ant-modal-header {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-purple) 100%);
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+}
+
+.rpa-modal .ant-modal-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.rpa-modal .ant-modal-close {
+  color: white;
+  top: 1.5rem;
+  right: 2rem;
+}
+
+.rpa-modal .ant-modal-body {
+  padding: 2rem;
+  background: var(--surface-white);
+}
+
+/* ====== SEARCH BAR ====== */
+.rpa-search-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.rpa-search .ant-input-search {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.rpa-search .ant-input {
+  border: 2px solid var(--surface-gray-200);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: var(--transition);
+}
+
+.rpa-search .ant-input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(54, 162, 218, 0.1);
+}
+
+.rpa-search .ant-input-search-button {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  border: none;
+  height: 100%;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* ====== STATISTICS CARDS ====== */
+.rpa-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.rpa-stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.rpa-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand-orange), var(--brand-blue), var(--brand-green), var(--brand-purple), var(--brand-navy));
+  transition: var(--transition);
+}
+
+.rpa-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+.rpa-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.rpa-stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+  font-weight: 500;
+}
+
+/* ====== LOADING STATES ====== */
+.rpa-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.rpa-loading-spinner {
+  margin-right: 0.5rem;
+  color: var(--brand-blue);
+}
+
+/* ====== RESPONSIVE DESIGN ====== */
+@media (max-width: 768px) {
+  .rpa-vigilancia-container {
+    padding: 1rem;
+  }
+  
+  .rpa-header {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  
+  .rpa-actions,
+  .rpa-progress-section {
+    padding: 1.5rem;
+  }
+  
+  .rpa-button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .rpa-button-group > * {
+    width: 100%;
+  }
+  
+  .progress-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .rpa-search-container {
+    flex-direction: column;
+  }
+  
+  .rpa-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .rpa-actions { display: block; }
+  .rpa-button-group {
+    margin-left: 0;
+    justify-content: stretch;
+  }
+}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.rpa-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* ====== UTILITY CLASSES ====== */
+.text-brand-orange { color: var(--brand-orange); }
+.text-brand-blue { color: var(--brand-blue); }
+.text-brand-green { color: var(--brand-green); }
+.text-brand-purple { color: var(--brand-purple); }
+.text-brand-navy { color: var(--brand-navy); }
+
+/* Alinear el botón "Refrescar" a la derecha dentro de la celda */
+.rpa-table .rpa-refresh-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.rpa-table .rpa-refresh-row .rpa-action-btn {
+  margin-left: auto;            /* empuja el botón a la derecha */
+}
+/* Números con ancho tabular para que no “salten” */
+.rpa-table .rpa-metric {
+  font-variant-numeric: tabular-nums;
+}

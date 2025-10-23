@@ -1,0 +1,53 @@
+/* Roles.css */
+
+.roles-container {
+  padding: 24px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.roles-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #000F9F;
+}
+
+.roles-description {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.roles-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ant-btn-primary {
+  background-color: #A7D5F4;
+  border-color: #A7D5F4;
+}
+
+.ant-btn-primary:hover {
+  background-color: #d87e00;
+  border-color: #d87e00;
+}
+
+.ant-table {
+  border: 1px solid #e0e0e0;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.ant-space {
+  gap: 8px;
+}
+
+.ant-input {
+  width: 100%;
+}

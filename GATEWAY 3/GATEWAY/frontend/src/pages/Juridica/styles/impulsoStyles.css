@@ -1,0 +1,25 @@
+.container {
+  padding: 24px;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.react-quill {
+  background: white;
+  border-radius: 8px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ql-toolbar.ql-snow {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.ql-container.ql-snow {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  flex: 1;
+  overflow-y: auto;
+}

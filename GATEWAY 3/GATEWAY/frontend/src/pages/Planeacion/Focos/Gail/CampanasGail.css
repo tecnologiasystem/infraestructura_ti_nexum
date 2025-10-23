@@ -1,0 +1,44 @@
+.campanas-container {
+    margin-top: 55px;
+    padding: 24px;
+    font-family: 'Montserrat', sans-serif;
+  }
+ 
+  .campanas-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #000F9F;
+  }
+ 
+  .campanas-description {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+ 
+  .campanas-toolbar {
+    display: flex;
+    flex-wrap: wrap;   /* Para que los botones bajen a otra fila */
+    gap: 12px;        
+    margin-bottom: 20px;
+  }
+  .campanas-toolbar .ant-btn {
+  flex: 1;           /* Los botones ocuparán el mismo ancho */
+  min-width: 210px;  
+ }
+.no-scroll-hover .ant-picker-time-panel-column {
+  overflow: hidden !important;
+}
+@media (max-width: 1024px) {
+  .campanas-toolbar .ant-btn {
+    flex: 1 1 45%;  /* Dos columnas */
+    min-width: 200px;
+  }
+}
+ 
+@media (max-width: 768px) {
+  .campanas-toolbar .ant-btn {
+    flex: 100%;
+  }
+}

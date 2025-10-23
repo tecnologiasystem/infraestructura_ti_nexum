@@ -1,0 +1,12 @@
+# openssl.cnf básico para CA manual
+[ req ]
+distinguished_name = req_distinguished_name
+prompt = yes
+
+[ req_distinguished_name ]
+C  = CO
+ST = Bogota
+L  = Bogota
+O  = MiEmpresa
+OU = TI
+CN = My Internal CA

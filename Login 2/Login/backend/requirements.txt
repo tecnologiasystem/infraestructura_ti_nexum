@@ -1,0 +1,9 @@
+Flask==2.3.3
+Werkzeug==2.3.7
+fastapi
+uvicorn
+python-dotenv
+pyodbc
+sqlalchemy
+passlib[bcrypt]
+python-jose

@@ -1,0 +1,4 @@
+id_agent;agent_name;date_call;phone_code;telephone;customer_id;customer_id2;time_sec;time_min;call_cod_id;status_name;tipo;hang_up;campaign_id;campaign_name;list_id;lead_id;uniqueid;tipo_llamada;comments
+VDCL;Inbound No Agent;2025-06-02 12:27:25;1;3207922605;35;;;0.5833;DROP;Agent Not Available;;ABANDON;ADAMANTINEJURIDICO;;999;1127330;1748885244.2795;INBOUND;
+VDCL;Inbound No Agent;2025-06-02 12:52:18;1;3013216748;41;;;0.6833;DROP;Agent Not Available;;ABANDON;CREDIVALORES;;998;1127331;1748886713.2796;INBOUND;
+VDCL;Inbound No Agent;2025-06-02 15:55:45;1;3106516112;353;;;5.8833;DROP;Agent Not Available;;ABANDON;CREDIVALORES;;998;1127332;1748897719.2797;INBOUND;

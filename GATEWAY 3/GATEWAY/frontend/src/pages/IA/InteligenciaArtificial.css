@@ -1,0 +1,13 @@
+.inteligencia-container {
+    padding: 24px;
+    background: #f5f7fb;
+    min-height: 100vh;
+  }
+  
+  .inteligencia-grafico {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+  }
+  

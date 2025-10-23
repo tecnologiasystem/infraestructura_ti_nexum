@@ -1,0 +1,382 @@
+/* Variables CSS para consistencia */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --error-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --warning-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  --border-radius: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+/* Contenedor principal */
+.whatsapp-reports {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  padding: 5rem 1rem;
+}
+
+.whatsapp-reports .ant-typography-title {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  margin-bottom: 0.5rem !important;
+  font-size: 2rem !important;
+}
+
+.whatsapp-reports .ant-typography {
+  color: #64748b;
+  font-size: 16px;
+}
+
+/* Card principal con efecto glassmorphism */
+.whatsapp-reports .ant-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.whatsapp-reports .ant-card:hover {
+  box-shadow: var(--card-hover-shadow);
+  transform: translateY(-2px);
+}
+
+.whatsapp-reports .ant-card-body {
+  padding: 2rem;
+}
+
+/* Botones modernos */
+.whatsapp-reports .ant-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  height: 40px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.whatsapp-reports .ant-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.whatsapp-reports .ant-btn:hover::before {
+  left: 100%;
+}
+
+/* Botón primario con gradiente */
+.whatsapp-reports .ant-btn-primary {
+  background: var(--success-gradient);
+  box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+}
+
+.whatsapp-reports .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+}
+
+/* Botones secundarios */
+.whatsapp-reports .ant-btn-default {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #475569;
+}
+
+.whatsapp-reports .ant-btn-default:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  color: #1e293b;
+}
+
+/* Input de búsqueda */
+.whatsapp-reports .ant-input-affix-wrapper {
+  border-radius: 10px;
+  border: 1px solid rgba(203, 213, 225, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: var(--transition);
+  height: 40px;
+}
+
+.whatsapp-reports .ant-input-affix-wrapper:focus,
+.whatsapp-reports .ant-input-affix-wrapper-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.whatsapp-reports .ant-input {
+  background: transparent;
+  color: #334155;
+  font-weight: 500;
+}
+
+.whatsapp-reports .ant-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Divider moderno */
+.whatsapp-reports .ant-divider {
+  border-color: rgba(203, 213, 225, 0.4);
+  margin: 1rem 0 !important;
+}
+
+/* Tabla moderna */
+.whatsapp-reports .ant-table {
+  background: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.whatsapp-reports .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 16px 12px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.whatsapp-reports .ant-table-tbody > tr {
+  transition: var(--transition);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.whatsapp-reports .ant-table-tbody > tr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.whatsapp-reports .ant-table-tbody > tr:hover {
+  background: rgba(102, 126, 234, 0.08) !important;
+  transform: scale(1.01);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.whatsapp-reports .ant-table-cell {
+  border-color: rgba(226, 232, 240, 0.5) !important;
+  color: #475569;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+/* Tags modernos */
+.whatsapp-reports .ant-tag {
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 12px;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.whatsapp-reports .ant-tag-green {
+  background: var(--success-gradient);
+  color: white;
+  box-shadow: 0 2px 8px rgba(74, 222, 128, 0.3);
+}
+
+.whatsapp-reports .ant-tag-red {
+  background: var(--error-gradient);
+  color: white;
+  box-shadow: 0 2px 8px rgba(248, 113, 113, 0.3);
+}
+
+.whatsapp-reports .ant-tag-geekblue {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.whatsapp-reports .ant-tag-gold {
+  background: var(--warning-gradient);
+  color: #92400e;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+/* Enlaces de descarga */
+.whatsapp-reports a {
+  color: #667eea;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  position: relative;
+}
+
+.whatsapp-reports a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--primary-gradient);
+  transition: width 0.3s ease;
+}
+
+.whatsapp-reports a:hover::after {
+  width: 100%;
+}
+
+.whatsapp-reports a:hover {
+  color: #4f46e5;
+  transform: translateY(-1px);
+}
+
+/* Tooltips */
+.whatsapp-reports .ant-tooltip {
+  z-index: 9999;
+}
+
+.whatsapp-reports .ant-tooltip-inner {
+  background: rgba(51, 65, 85, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.whatsapp-reports .ant-tooltip-arrow::before {
+  background: rgba(51, 65, 85, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Iconos */
+.whatsapp-reports .anticon {
+  transition: var(--transition);
+}
+
+.whatsapp-reports .ant-btn:hover .anticon {
+  transform: scale(1.1);
+}
+
+/* Contador de registros */
+.whatsapp-reports .ant-typography:last-child {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  display: inline-block;
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+/* Loading state */
+.whatsapp-reports .ant-btn-loading {
+  opacity: 0.8;
+  transform: none !important;
+}
+
+/* Scrollbar personalizado */
+.whatsapp-reports ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.whatsapp-reports ::-webkit-scrollbar-track {
+  background: rgba(248, 250, 252, 0.5);
+  border-radius: 4px;
+}
+
+.whatsapp-reports ::-webkit-scrollbar-thumb {
+  background: var(--primary-gradient);
+  border-radius: 4px;
+}
+
+.whatsapp-reports ::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
+/* Animaciones de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.whatsapp-reports .ant-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .whatsapp-reports {
+    padding: 1rem 0.5rem;
+  }
+  
+  .whatsapp-reports .ant-card-body {
+    padding: 1rem;
+  }
+  
+  .whatsapp-reports .ant-typography-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .whatsapp-reports .ant-space-item {
+    margin-bottom: 8px;
+  }
+  
+  .whatsapp-reports .ant-input-affix-wrapper {
+    width: 100% !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --glass-bg: rgba(30, 41, 59, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
+  
+  .whatsapp-reports {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+  
+  .whatsapp-reports .ant-typography {
+    color: #cbd5e1;
+  }
+  
+  .whatsapp-reports .ant-table-cell {
+    color: #e2e8f0 !important;
+  }
+  
+  .whatsapp-reports .ant-table-tbody > tr {
+    background: rgba(51, 65, 85, 0.7);
+  }
+  
+  .whatsapp-reports .ant-table-tbody > tr:nth-child(even) {
+    background: rgba(71, 85, 105, 0.7);
+  }
+}

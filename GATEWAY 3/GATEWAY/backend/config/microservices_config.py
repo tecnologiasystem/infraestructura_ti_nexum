@@ -1,0 +1,22 @@
+MICRO_URLS = {
+    "ADMINISTRACION": "http://172.18.72.111:8001",
+    "NOTIFICACIONES": "http://172.18.72.111:8003",
+    "JURIDICA": "http://172.18.72.111:8009",
+    "CHAT": "http://172.18.72.111:8004",
+    "PLANEACION": "http://172.18.72.111:8005",
+    "IA": "http://172.18.72.111:8010",
+    "GRAFICOS": "http://172.18.72.111:8008",
+    "CONVERSOR": "http://172.18.72.111:8013",
+    "CONTACTO": "http://172.18.72.111:8014",
+    "GAIL": "http://172.18.72.111:8015",
+    "SALUD": "http://172.18.72.111:8017",
+    "TABLEROS": "http://172.18.72.111:8019",
+    "PROJECT_MANAGER": "http://localhost:8020",
+    "WHATSAPP": "http://172.18.72.111:8021",
+    "JURIDICABOT": "http://172.18.72.111:8022",
+    "MENSAJESWHATSAPP": "http://172.18.72.111:8023",
+    "COLTEFINANCIERA": "http://172.18.72.111:8024",
+    "TESEO": "http://172.18.72.111:8025",
+    "EMAIL": "http://172.18.72.111:8026",
+}
+ 

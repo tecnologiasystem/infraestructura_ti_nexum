@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-socketio
+python-engineio
+aiofiles
+aiohttp
+requests
+pydantic
+pyjwt
+sqlalchemy
+pyodbc
+openpyxl
+pandas
+python-dotenv

@@ -1,0 +1,44 @@
+.conversor-container {
+  max-width: 997px;          
+  padding: 1rem 2rem;
+  background-color: white;   
+  box-shadow: 0 0 10px rgba(0,0,0,0.05); 
+  border-radius: 8px; 
+  font-size: 13px;
+}
+
+
+
+.conversor-container .ant-upload {
+  margin-bottom: 1rem;
+}
+
+.conversor-container .ant-btn {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+.conversor-container .ant-switch {
+  transform: scale(0.85);
+}
+
+.compact-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.compact-table .ant-table {
+  font-size: 12px !important;
+}
+
+.compact-table .ant-table-thead > tr > th,
+.compact-table .ant-table-tbody > tr > td {
+  padding: 4px 8px !important;
+  white-space: nowrap;
+}
+.conversor-container .ant-upload {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+

@@ -1,0 +1,24 @@
+body, html, #root {
+    height: 100%;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  .crearusuario-container {
+    background: url('../../../assets/img/Fondo-inicio.png') no-repeat center center fixed;
+    background-size: cover;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px); /* desenfoque bonito */
+  }
+  
+  .crearusuario-card {
+    width: 400px;
+    padding: 32px;
+    background: rgba(255, 255, 255, 0.9); /* tarjeta transparente */
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+  

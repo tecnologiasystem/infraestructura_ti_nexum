@@ -1,0 +1,4 @@
+id_agent;agent_name;date_call;phone_code;telephone;customer_id;customer_id2;time_sec;time_min;call_cod_id;status_name;tipo;hang_up;campaign_id;campaign_name;list_id;lead_id;uniqueid;tipo_llamada;comments
+VDCL;Inbound No Agent;2025-06-08 09:50:51;1;6076805341;12;;;0.2000;DROP;Agent Not Available;;ABANDON;JCAPJURIDICO;;999;1629992;1749394251.29440;INBOUND;
+VDCL;Inbound No Agent;2025-06-08 12:15:14;1;3176198724;11;;;0.1833;DROP;Agent Not Available;;ABANDON;JCAPComercial;;999;1629993;1749402913.29441;INBOUND;
+VDCL;Inbound No Agent;2025-06-08 14:39:31;1;3204735956;50;;;0.8333;DROP;Agent Not Available;;ABANDON;CREDIVALORES;;998;1629994;1749411546.29442;INBOUND;

@@ -1,0 +1,313 @@
+/* src/styles/usuarios.css */
+
+.listar-usuarios-container {
+  padding: 24px;
+  font-family: 'Montserrat', sans-serif;
+  }
+  
+  .listar-usuarios-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #000F9F;
+  }
+/* ====== USUARIOS - MODERN DESIGN ====== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --brand-orange: #EE8D00;
+  --brand-blue: #36A2DA;
+  --brand-green: #90BC1F;
+  --brand-purple: #662480;
+  --brand-navy: #000F9F;
+  --orange-light: #FFC670;
+  --blue-light: #6CCBF8;
+  --green-light: #BFE164;
+  --purple-light: #9E63C4;
+  --navy-light: #5460FF;
+  --surface-white: #ffffff;
+  --surface-gray-50: #f8fafc;
+  --surface-gray-100: #f1f5f9;
+  --surface-gray-200: #e2e8f0;
+  --surface-gray-300: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --shadow-strong: 0 16px 60px rgba(0, 0, 0, 0.16);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.usuarios-container {
+  min-height: 100vh;
+  margin-top:30px;
+  background: linear-gradient(135deg, var(--surface-gray-50) 0%, var(--surface-white) 100%);
+  position: relative;
+  padding: 2rem;
+}
+.usuarios-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(600px circle at 20% 10%, rgba(238, 141, 0, 0.04), transparent 50%),
+    radial-gradient(800px circle at 80% 20%, rgba(54, 162, 218, 0.04), transparent 50%),
+    radial-gradient(400px circle at 40% 80%, rgba(144, 188, 31, 0.03), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.usuarios-main-card {
+  position: relative;
+  z-index: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  transition: var(--transition);
+}
+.usuarios-main-card:hover {
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-2px);
+}
+
+.usuarios-header {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-purple) 100%);
+  color: white;
+  padding: 1rem 3rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.usuarios-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+.usuarios-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  color: white;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.usuarios-description {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 600px;
+  position: relative;
+  z-index: 1;
+}
+.usuarios-actions {
+  display: flex; 
+  padding: 1rem 3rem;
+  background: var(--surface-white);
+  border-bottom: 1px solid var(--surface-gray-200);
+}
+.usuarios-button-group {
+  margin-left: auto; 
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+.usuarios-btn-primary {
+  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--orange-light) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  box-shadow: 0 4px 16px rgba(238, 141, 0, 0.3);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.usuarios-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(238, 141, 0, 0.4);
+}
+.usuarios-btn-secondary {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  height: auto;
+  box-shadow: 0 4px 16px rgba(54, 162, 218, 0.3);
+  transition: var(--transition);
+}
+.usuarios-btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(54, 162, 218, 0.4);
+}
+.usuarios-table {
+  background: var(--surface-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--surface-gray-200);
+}
+.usuarios-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, var(--surface-gray-50) 0%, var(--surface-white) 100%);
+  border-bottom: 2px solid var(--surface-gray-200);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+.usuarios-table .ant-table-tbody > tr {
+  transition: var(--transition);
+}
+.usuarios-table .ant-table-tbody > tr:hover {
+  background: linear-gradient(135deg, rgba(238, 141, 0, 0.03) 0%, rgba(54, 162, 218, 0.03) 100%);
+  transform: scale(1.001);
+}
+.usuarios-table .ant-table-tbody > tr > td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-gray-100);
+  color: var(--text-secondary);
+}
+.usuarios-modal .ant-modal-content {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-strong);
+  border: 1px solid var(--surface-gray-200);
+}
+.usuarios-modal .ant-modal-header {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-purple) 100%);
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+}
+.usuarios-modal .ant-modal-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.usuarios-modal .ant-modal-close {
+  color: white;
+  top: 1.5rem;
+  right: 2rem;
+}
+.usuarios-modal .ant-modal-body {
+  padding: 2rem;
+  background: var(--surface-white);
+}
+.usuarios-search-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.usuarios-search .ant-input-search {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.usuarios-search .ant-input {
+  border: 2px solid var(--surface-gray-200);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: var(--transition);
+}
+.usuarios-search .ant-input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(54, 162, 218, 0.1);
+}
+.usuarios-search .ant-input-search-button {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  border: none;
+  height: 100%;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.usuarios-action-btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: var(--transition);
+  border: none;
+  height: auto;
+  padding: 0.5rem 1rem;
+}
+.usuarios-action-btn.edit {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--blue-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(54, 162, 218, 0.3);
+}
+.usuarios-action-btn.activate {
+  background: linear-gradient(135deg, var(--brand-green) 0%, var(--green-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(144, 188, 31, 0.3);
+}
+.usuarios-action-btn.deactivate {
+  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--orange-light) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(238, 141, 0, 0.3);
+}
+.usuarios-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+@media (max-width: 768px) {
+  .usuarios-container {
+    padding: 1rem;
+  }
+  .usuarios-header {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .usuarios-actions,
+  .usuarios-main-card {
+    padding: 1.5rem;
+  }
+  .usuarios-button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  .usuarios-button-group > * {
+    width: 100%;
+  }
+  .usuarios-search-container {
+    flex-direction: column;
+  }
+  .usuarios-search {
+    width: 100%;
+  }
+}
+  
+  .listar-usuarios-description {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .listar-usuarios-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .listar-usuarios-table {
+    background: white;
+  }
+  
