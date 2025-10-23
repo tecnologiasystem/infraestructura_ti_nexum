@@ -1,1 +1,75 @@
+# ====================================
+# 🐍 Python / Nexum Infra .gitignore
+# ====================================
+
+# --- Entornos virtuales ---
 env/
+venv/
+.venv/
+*/env/
+*/venv/
+*/.venv/
+
+# --- Archivos compilados ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Archivos de entorno y configuración local ---
+*.env
+*.local
+.env.*
+secrets.json
+
+# --- Archivos temporales / logs ---
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# --- Archivos de datos grandes ---
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bak
+*.dll
+*.exe
+*.iso
+
+# --- Archivos del sistema operativo ---
+desktop.ini
+ehthumbs.db
+Icon?
+.DS_Store
+
+# --- Librerías instaladas ---
+*/Lib/
+*/Include/
+*/Scripts/
+*/site-packages/
+
+# --- Archivos de Jupyter ---
+.ipynb_checkpoints
+*.ipynb
+
+# --- Archivos de cache y build ---
+build/
+dist/
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.iml
+
+# --- Otros ---
+*.db
+*.sqlite3
