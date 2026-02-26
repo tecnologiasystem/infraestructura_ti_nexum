@@ -12,7 +12,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaJuridico.css";
 
 const RpaJuridico = () => {
@@ -200,7 +200,7 @@ const RpaJuridico = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/juridicoBot_api/detalle/listar_agrupadoJuridico`
+        `${API_URL_GATEWAY_RPA}/gateway/juridicoBot_api/detalle/listar_agrupadoJuridico`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -225,14 +225,14 @@ const RpaJuridico = () => {
   const cargarAutomatizaciones = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesJuridico`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesJuridico`
       );
       const data = await res.json();
 
       const automationsWithProgress = await Promise.all(
         (data || []).map(async (auto) => {
           const detalleRes = await fetch(
-            `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleJuridico?id_encabezado=${auto.idEncabezado}`
+            `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleJuridico?id_encabezado=${auto.idEncabezado}`
           );
           const detalleData = await detalleRes.json();
 
@@ -272,7 +272,7 @@ const RpaJuridico = () => {
   const refrescarProgreso = async (idEncabezado) => {
     try {
       const detalleRes = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleJuridico?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleJuridico?id_encabezado=${idEncabezado}`
       );
       const detalleData = await detalleRes.json();
 
@@ -291,7 +291,7 @@ const RpaJuridico = () => {
       if (porcentaje === 100) {
         try {
           const r = await fetch(
-            `${API_URL_GATEWAY}/gateway-rpa/notificarFinalizacionJuridico`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionJuridico`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -325,10 +325,10 @@ const RpaJuridico = () => {
     try {
       const [res5, res4] = await Promise.all([
         fetch(
-          `${API_URL_GATEWAY}/gateway-rpa/Juridica/accion5?id_encabezado=${idEncabezado}`
+          `${API_URL_GATEWAY_RPA}/gateway/Juridica/accion5?id_encabezado=${idEncabezado}`
         ),
         fetch(
-          `${API_URL_GATEWAY}/gateway-rpa/Juridica/accion4?id_encabezado=${idEncabezado}`
+          `${API_URL_GATEWAY_RPA}/gateway/Juridica/accion4?id_encabezado=${idEncabezado}`
         ),
       ]);
       if (!res5.ok || !res4.ok)
@@ -424,7 +424,7 @@ const RpaJuridico = () => {
   );
 
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway-rpa/juridicoBot_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/juridicoBot_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -434,7 +434,7 @@ const RpaJuridico = () => {
 
   const handleResume = async (id) => {
     await fetch(
-      `${API_URL_GATEWAY}/gateway-rpa/juridicoBot_api/reanudar/${id}`,
+      `${API_URL_GATEWAY_RPA}/gateway/juridicoBot_api/reanudar/${id}`,
       { method: "POST" }
     );
     setPausedEncabezado(null);
@@ -460,7 +460,7 @@ const RpaJuridico = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/plantillaJuridico`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaJuridico`
                 );
               }}
             >
@@ -478,7 +478,7 @@ const RpaJuridico = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway-rpa/excel/guardarJuridico`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarJuridico`,
                     {
                       method: "POST",
                       body: formData,
@@ -672,7 +672,7 @@ const RpaJuridico = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/exportar_resultadosJuridico?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosJuridico?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

@@ -23,8 +23,9 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import dayjs from "dayjs";
 import "./Chat.css";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_TOKI } from "../../config";
 import { v4 as uuidv4 } from "uuid";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import advancedFormat from "dayjs/plugin/advancedFormat";
 import "dayjs/locale/es";
@@ -272,8 +273,8 @@ const ChatApp = () => {
   const guardarMensaje = async (mensaje) => {
     try {
       const endpoint = modoGrupal
-        ? `${API_URL_GATEWAY}/gateway/guardarMensajeGrupo`
-        : `${API_URL_GATEWAY}/gateway/guardarMensaje`;
+        ? `${API_URL_GATEWAY_TOKI}/gateway/guardarMensajeGrupo`
+        : `${API_URL_GATEWAY_TOKI}/gateway/guardarMensaje`;
 
       const payload = {
         sender_id: mensaje.sender_id,
@@ -401,7 +402,7 @@ const ChatApp = () => {
         if (!nombreRemitente) {
           try {
             const res = await fetch(
-              `${API_URL_GATEWAY}/gateway/buscarPersonas?query=${encodeURIComponent(
+              `${API_URL_GATEWAY_TOKI}/gateway/buscarPersonas?query=${encodeURIComponent(
                 data.sender_id
               )}&user_id=${localStorage.getItem("idUsuario")}`
             );
@@ -467,7 +468,7 @@ const ChatApp = () => {
           }
 
           const res = await fetch(
-            `${API_URL_GATEWAY}/gateway/buscarPersonas?query=${encodeURIComponent(
+            `${API_URL_GATEWAY_TOKI}/gateway/buscarPersonas?query=${encodeURIComponent(
               userKey
             )}&user_id=${localStorage.getItem("idUsuario")}`
           );
@@ -694,12 +695,12 @@ const ChatApp = () => {
     try {
       // Obtener campañas del usuario
       const resCampanas = await fetch(
-        `${API_URL_GATEWAY}/gateway/usuariosCampanas/dar`
+        `${API_URL_GATEWAY_CONNECT}/gateway/usuariosCampanas/dar`
       );
       const campanasData = await resCampanas.json();
 
       const resCampanasFull = await fetch(
-        `${API_URL_GATEWAY}/gateway/campanas/dar`
+        `${API_URL_GATEWAY_CONNECT}/gateway/campanas/dar`
       );
       const campanasFull = await resCampanasFull.json();
       campanasFullRef.current = campanasFull;
@@ -711,7 +712,7 @@ const ChatApp = () => {
       const idsCampanas = usuarioCampanas.map((camp) => camp.idCampana);
 
       // Validación del parámetro query
-      const urlBuscarPersonas = `${API_URL_GATEWAY}/gateway/buscarPersonas?query=&user_id=${usuarioId}`;
+      const urlBuscarPersonas = `${API_URL_GATEWAY_TOKI}/gateway/buscarPersonas?query=&user_id=${usuarioId}`;
       const resPersonas = await fetch(urlBuscarPersonas);
 
       // Validación clave
@@ -924,17 +925,16 @@ const ChatApp = () => {
   }, [isSocketReady]);
 
   const fetchUserChats = async (userId, REC) => {
-    // Validar claramente que REC sea numérico antes de hacer fetch
+    // Validar claramente que REC sea numÃ©rico antes de hacer fetch
     if (isNaN(Number(REC))) {
-      console.warn("REC no es numérico:", REC);
+      console.warn("REC no es numÃ©rico:", REC);
       return;
     }
 
     try {
+      const myUserId = localStorage.getItem("idUsuario");
       const response = await fetch(
-        `${API_URL_GATEWAY}/gateway/getChats?user_id=${localStorage.getItem(
-          "idUsuario"
-        )}&recipient_id=${REC}`,
+        `${API_URL_GATEWAY_TOKI}/gateway/getChats?user_id=${myUserId}&recipient_id=${REC}`,
         { signal: AbortSignal.timeout(15000) } // Timeout de 15 segundos
       );
 
@@ -953,7 +953,7 @@ const ChatApp = () => {
         data.forEach((chat) => {
           const sender = String(chat.sender_id || chat.idRemitente);
           const recipient = String(chat.recipient_id || chat.idDestinatario);
-          const otherUserId = sender === userId ? recipient : sender;
+          const otherUserId = sender === myUserId ? recipient : sender;
 
           const newMsg = {
             sender_id: sender,
@@ -961,9 +961,9 @@ const ChatApp = () => {
             message: chat.message || chat.mensaje || "",
             file: chat.file || null,
             fileName: chat.fileName || null,
-            isOwnMessage: String(sender) === String(effectiveUserId),
+            isOwnMessage: String(sender) === String(myUserId),
             timestamp: chat.timestamp || Date.now(),
-            status: "delivered", // mensajes históricos ya están entregados
+            status: "delivered", // mensajes histÃ³ricos ya estÃ¡n entregados
           };
 
           uniqueUserIds.add(otherUserId);
@@ -988,7 +988,7 @@ const ChatApp = () => {
           Array.from(uniqueUserIds).map(async (pid) => {
             try {
               const res = await fetch(
-                `${API_URL_GATEWAY}/gateway/buscarPersonas?query=${encodeURIComponent(
+                `${API_URL_GATEWAY_TOKI}/gateway/buscarPersonas?query=${encodeURIComponent(
                   pid
                 )}&user_id=${localStorage.getItem("idUsuario")}`
               );
@@ -1048,7 +1048,7 @@ const ChatApp = () => {
   const cargarMensajesGenerales = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/traerMensajesGenerales`
+        `${API_URL_GATEWAY_TOKI}/gateway/traerMensajesGenerales`
       );
       if (!res.ok) throw new Error("Error al traer mensajes generales");
       const data = await res.json();
@@ -1110,7 +1110,7 @@ const ChatApp = () => {
       try {
         // ✅ Verificar permiso para mensajes generales
         const resPermiso = await fetch(
-          `${API_URL_GATEWAY}/gateway/puedeEnviarMensajeGeneral/${userId}`
+          `${API_URL_GATEWAY_TOKI}/gateway/puedeEnviarMensajeGeneral/${userId}`
         );
         const permisoData = await resPermiso.json();
         setPuedeEnviarMensajeGeneral(permisoData.puedeEnviar);
@@ -1135,7 +1135,7 @@ const ChatApp = () => {
       setModoGrupal(true);
       try {
         const res = await fetch(
-          `${API_URL_GATEWAY}/gateway/traerChatsGrupo?room=${numericId}`
+          `${API_URL_GATEWAY_TOKI}/gateway/traerChatsGrupo?room=${numericId}`
         );
         const data = await res.json();
 
@@ -1168,7 +1168,7 @@ const ChatApp = () => {
     try {
       const tuId = localStorage.getItem("idUsuario");
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/getChats?user_id=${tuId}&recipient_id=${numericId}`
+        `${API_URL_GATEWAY_TOKI}/gateway/getChats?user_id=${tuId}&recipient_id=${numericId}`
       );
       const data = await res.json();
 
@@ -1226,7 +1226,7 @@ const ChatApp = () => {
 
       try {
         const res = await fetch(
-          `${API_URL_GATEWAY}/gateway/guardarMensajeGeneral`,
+          `${API_URL_GATEWAY_TOKI}/gateway/guardarMensajeGeneral`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1363,7 +1363,7 @@ const ChatApp = () => {
 
           try {
             const res = await fetch(
-              `${API_URL_GATEWAY}/gateway/guardarMensajeGeneral`,
+              `${API_URL_GATEWAY_TOKI}/gateway/guardarMensajeGeneral`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1467,7 +1467,7 @@ const ChatApp = () => {
 
           try {
             const res = await fetch(
-              `${API_URL_GATEWAY}/gateway/guardarMensajeGeneral`,
+              `${API_URL_GATEWAY_TOKI}/gateway/guardarMensajeGeneral`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1540,7 +1540,7 @@ const ChatApp = () => {
       const query = texto?.trim() ?? "";
 
       const response = await fetch(
-        `${API_URL_GATEWAY}/gateway/buscarPersonas?query=${encodeURIComponent(
+        `${API_URL_GATEWAY_TOKI}/gateway/buscarPersonas?query=${encodeURIComponent(
           query
         )}&user_id=${localStorage.getItem("idUsuario")}`
       );
@@ -1698,7 +1698,7 @@ const ChatApp = () => {
     try {
       const userId = localStorage.getItem("idUsuario");
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/usuariosGrupo?user_id=${userId}&idCampana=${idCampana}`
+        `${API_URL_GATEWAY_TOKI}/gateway/usuariosGrupo?user_id=${userId}&idCampana=${idCampana}`
       );
       if (!res.ok) throw new Error("Error al obtener miembros");
       const data = await res.json();
@@ -1897,140 +1897,134 @@ const ChatApp = () => {
                   if (file) handleAttachDroppedFile(file);
                 }}
               >
-                {(() => {
-                  const mensajes = allMessages[currentUser.id] || [];
-                  let lastDate = null;
+           {(() => {
+  const mensajes = allMessages[currentUser.id] || [];
+  const myUserId = String(localStorage.getItem("idUsuario") || "");
+  let lastDate = null;
 
-                  return mensajes.map((msg, idx) => {
-                    const msgDate = dayjs(msg.timestamp).format("YYYY-MM-DD");
-                    const isNewDate = msgDate !== lastDate;
-                    lastDate = msgDate;
+  return mensajes.map((msg, idx) => {
+    const msgDate = dayjs(msg.timestamp).format("YYYY-MM-DD");
+    const isNewDate = msgDate !== lastDate;
+    lastDate = msgDate;
 
-                    return (
-                      <React.Fragment key={idx}>
-                        {isNewDate && (
-                          <div className="date-separator">
-                            <span>
-                              {dayjs(msg.timestamp).format(
-                                "dddd, D [de] MMMM [de] YYYY"
-                              )}
-                            </span>
-                          </div>
-                        )}
+    // 👇 SOLO usamos sender_id / idRemitente
+    const isOwn = String(msg.sender_id || msg.idRemitente || "") === myUserId;
 
-                        <div
-                          ref={(el) => (messageRefs.current[idx] = el)}
-                          className={`message-bubble ${
-                            msg.isOwnMessage ? "sent" : "received"
-                          } ${
-                            highlightedMessageIndex === idx ? "highlighted" : ""
-                          }`}
-                        >
-                          {currentUser.id.startsWith("grupo_") &&
-                            !msg.isOwnMessage && (
-                              <div className="group-sender">
-                                {msg.sender_name ||
-                                  usuariosMapRef.current[msg.sender_id] ||
-                                  "Desconocido"}
-                              </div>
-                            )}
+    return (
+      <React.Fragment key={idx}>
+        {isNewDate && (
+          <div className="date-separator">
+            <span>
+              {dayjs(msg.timestamp).format(
+                "dddd, D [de] MMMM [de] YYYY"
+              )}
+            </span>
+          </div>
+        )}
 
-                          {msg.message !== "{adjunto}" ? (
-                            // Si el mensaje no es un adjunto
-                            msg.fileName?.toLowerCase().endsWith(".mp4") ? (
-                              // Si el mensaje es un mp4 (video), muestra video embebido
-                              <video
-                                controls
-                                width="250"
-                                style={{ borderRadius: "12px" }}
-                              >
-                                <source src={msg.message} type="video/mp4" />
-                                Tu navegador no soporta videos.
-                              </video>
-                            ) : (
-                              // Sino, muestra el texto normal
-                              <span>{msg.message}</span>
-                            )
-                          ) : msg.file ? (
-                            <div className="file-attachment">
-                              {msg.fileName
-                                ?.toLowerCase()
-                                .match(/\.(jpeg|jpg|gif|png)$/i) ? (
-                                // Si es imagen, muestra la imagen
-                                <img
-                                  src={
-                                    msg.file?.startsWith("data:")
-                                      ? msg.file
-                                      : `data:image/png;base64,${msg.file}`
-                                  }
-                                  alt={msg.fileName}
-                                  style={{
-                                    maxWidth: "200px",
-                                    maxHeight: "200px",
-                                    borderRadius: "12px",
-                                    marginBottom: "5px",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => {
-                                    setImagenEnModal(
-                                      msg.file?.startsWith("data:")
-                                        ? msg.file
-                                        : `data:image/*;base64,${msg.file}`
-                                    );
-                                    setNombreImagenModal(
-                                      msg.fileName || "imagen"
-                                    );
-                                  }}
-                                />
-                              ) : msg.fileName
-                                  ?.toLowerCase()
-                                  .endsWith(".mp4") ? (
-                                // Si es video como adjunto, muestra el reproductor
-                                <video
-                                  controls
-                                  width="250"
-                                  style={{ borderRadius: "12px" }}
-                                >
-                                  <source
-                                    src={
-                                      msg.file?.startsWith("data:")
-                                        ? msg.file
-                                        : `data:video/mp4;base64,${msg.file}`
-                                    }
-                                    type="video/mp4"
-                                  />
-                                  Tu navegador no soporta videos.
-                                </video>
-                              ) : (
-                                // Sino, muestra como adjunto descargable
-                                <a
-                                  href={
-                                    msg.file?.startsWith("data:")
-                                      ? msg.file
-                                      : `data:application/octet-stream;base64,${msg.file}`
-                                  }
-                                  download={msg.fileName}
-                                  className="file-download-link"
-                                >
-                                  <div className="file-icon">📎</div>
-                                  <div className="file-name">
-                                    {msg.fileName}
-                                  </div>
-                                </a>
-                              )}
-                            </div>
-                          ) : (
-                            <span>Archivo no disponible</span>
-                          )}
+        <div
+          ref={(el) => (messageRefs.current[idx] = el)}
+          className={`message-bubble ${
+            isOwn ? "sent" : "received"
+          } ${highlightedMessageIndex === idx ? "highlighted" : ""}`}
+        >
+          {currentUser.id.startsWith("grupo_") && !isOwn && (
+            <div className="group-sender">
+              {msg.sender_name ||
+                usuariosMapRef.current[msg.sender_id] ||
+                "Desconocido"}
+            </div>
+          )}
 
-                          <div className="message-time">
-                            {dayjs(msg.timestamp).format("h:mm A")}
-                          </div>
-                        </div>
-                      </React.Fragment>
+          {msg.message !== "{adjunto}" ? (
+            // Si el mensaje no es un adjunto
+            msg.fileName?.toLowerCase().endsWith(".mp4") ? (
+              // Si el mensaje es un mp4 (video), muestra video embebido
+              <video
+                controls
+                width="250"
+                style={{ borderRadius: "12px" }}
+              >
+                <source src={msg.message} type="video/mp4" />
+                Tu navegador no soporta videos.
+              </video>
+            ) : (
+              // Sino, muestra el texto normal
+              <span>{msg.message}</span>
+            )
+          ) : msg.file ? (
+            <div className="file-attachment">
+              {msg.fileName?.toLowerCase().match(/\.(jpeg|jpg|gif|png)$/i) ? (
+                // Imagen
+                <img
+                  src={
+                    msg.file?.startsWith("data:")
+                      ? msg.file
+                      : `data:image/png;base64,${msg.file}`
+                  }
+                  alt={msg.fileName}
+                  style={{
+                    maxWidth: "200px",
+                    maxHeight: "200px",
+                    borderRadius: "12px",
+                    marginBottom: "5px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setImagenEnModal(
+                      msg.file?.startsWith("data:")
+                        ? msg.file
+                        : `data:image/*;base64,${msg.file}`
                     );
-                  });
-                })()}
+                    setNombreImagenModal(msg.fileName || "imagen");
+                  }}
+                />
+              ) : msg.fileName?.toLowerCase().endsWith(".mp4") ? (
+                // Video adjunto
+                <video
+                  controls
+                  width="250"
+                  style={{ borderRadius: "12px" }}
+                >
+                  <source
+                    src={
+                      msg.file?.startsWith("data:")
+                        ? msg.file
+                        : `data:video/mp4;base64,${msg.file}`
+                    }
+                    type="video/mp4"
+                  />
+                  Tu navegador no soporta videos.
+                </video>
+              ) : (
+                // Otro archivo
+                <a
+                  href={
+                    msg.file?.startsWith("data:")
+                      ? msg.file
+                      : `data:application/octet-stream;base64,${msg.file}`
+                  }
+                  download={msg.fileName}
+                  className="file-download-link"
+                >
+                  <div className="file-icon">📎</div>
+                  <div className="file-name">{msg.fileName}</div>
+                </a>
+              )}
+            </div>
+          ) : (
+            <span>Archivo no disponible</span>
+          )}
+
+          <div className="message-time">
+            {dayjs(msg.timestamp).format("h:mm A")}
+          </div>
+        </div>
+      </React.Fragment>
+    );
+  });
+})()}
+
 
                 <div ref={messagesEndRef} />
               </div>

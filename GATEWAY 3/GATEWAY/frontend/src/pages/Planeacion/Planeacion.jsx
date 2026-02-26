@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Spin, message, Row, Col, Card, Typography } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList} from "recharts";
 import axios from "axios";
-import { API_URL_GATEWAY } from "../../config";  // Asegúrate de tener la URL de tu API correctamente configurada
+import { API_URL_GATEWAY_RPA } from "../../config";  // Asegúrate de tener la URL de tu API correctamente configurada
 
 const { Title } = Typography;
 
@@ -17,8 +17,8 @@ const FocoDataChart = () => {
     try {
       const filtros = {};  // Asegúrate de pasar los filtros correctos
       const [focoTrabajableRes, focoResultadoRes] = await Promise.all([
-        axios.post(`${API_URL_GATEWAY}/gateway/focos/trabajable/consultar`, filtros),
-        axios.post(`${API_URL_GATEWAY}/gateway/focos/resultado/consultar`, filtros),
+        axios.post(`${API_URL_GATEWAY_RPA}/gateway/focos/trabajable/consultar`, filtros),
+        axios.post(`${API_URL_GATEWAY_RPA}/gateway/focos/resultado/consultar`, filtros),
       ]);
 
       // Suponiendo que los endpoints retornan los resultados en un array

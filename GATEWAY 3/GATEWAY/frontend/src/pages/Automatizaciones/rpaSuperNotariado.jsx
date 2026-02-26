@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaSuperNotariado.css";
 import InfoPopup from "../../components/InfoPopup";
 
@@ -62,7 +62,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/superNotariado_api/detalle/listar_agrupado`
+        `${API_URL_GATEWAY_RPA}/gateway/superNotariado_api/detalle/listar_agrupado`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -77,13 +77,13 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
     // 1) Intento endpoint de resumen “nuevo”
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizaciones/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizaciones/${idEncabezado}/resumen`
       );
       if (res.ok) return await res.json(); // { procesados, totalRegistros }
     } catch (_) {}
     // 2) Fallback: resumido actual (detallesIngresados/totalRegistros)
     const r = await fetch(
-      `${API_URL_GATEWAY}/gateway/Juridica/listarAutomatizacionesDetalleResumido?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Juridica/listarAutomatizacionesDetalleResumido?id_encabezado=${idEncabezado}`
     );
     const data = await r.json(); // { detallesIngresados, totalRegistros }
     return {
@@ -103,7 +103,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
       // 1) Intento endpoint paginado (retrocompat si aún devuelve array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizaciones?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizaciones?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -149,7 +149,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionSuperNotariado`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionSuperNotariado`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -187,7 +187,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
     try {
       // 1) Intento endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizaciones/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizaciones/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -212,7 +212,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
       // 2) Fallback: endpoint actual que trae TODO y agrupa en front (pesado)
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalle?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalle?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // { detalles: [...] }
       const detallesValidos = (full?.detalles || []).filter(
@@ -257,7 +257,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   // ===== Pausar / Reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/superNotariado_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/superNotariado_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -267,7 +267,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
 
   const handleResume = async (id) => {
     await fetch(
-      `${API_URL_GATEWAY}/gateway/superNotariado_api/reanudar/${id}`,
+      `${API_URL_GATEWAY_RPA}/gateway/superNotariado_api/reanudar/${id}`,
       { method: "POST" }
     );
     setPausedEncabezado(null);
@@ -322,7 +322,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaNotariado`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaNotariado`
                 );
               }}
             >
@@ -339,7 +339,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarNotariado`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarNotariado`,
                     {
                       method: "POST",
                       body: formData,
@@ -556,7 +556,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosNotariado?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosNotariado?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >
@@ -596,7 +596,7 @@ const [showInfoPopup, setShowInfoPopup] = useState(false);
                     type="link"
                     onClick={() =>
                       window.open(
-                        `${API_URL_GATEWAY}/gateway/excel/descargar_pdf_notariado?cedula=${cc}`,
+                        `${API_URL_GATEWAY_RPA}/gateway/excel/descargar_pdf_notariado?cedula=${cc}`,
                         "_blank"
                       )
                     }

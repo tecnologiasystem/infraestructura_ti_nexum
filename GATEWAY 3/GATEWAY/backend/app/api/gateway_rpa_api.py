@@ -644,7 +644,6 @@ async def gateway_darUsuarioCC():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-
 @router.get("/WhatsApp/listarAutomatizacionesDetalleMensajeWhatsApp", tags=["Automatizaciones WhatsApp"])
 async def gateway_listarAutomatizacionesDetalle(id_encabezado):
     try:
@@ -807,7 +806,7 @@ async def gateway_registrar_mensaje_whatsapp(
                 headers["X-User-Id"] = str(id_usuario_app)
 
             resp = await client.post(
-                f"{MICRO_URLS['WHATSAPP']}/enviowhatsapp_api/whatsapp/registrar",
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/registrar",
                 content=mp.to_string(),
                 headers=headers,
             )
@@ -858,7 +857,7 @@ async def gateway_pendientes_json(
     try:
         async with httpx.AsyncClient(timeout=360.0) as client:
             resp = await client.get(
-                f"{MICRO_URLS['WHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json",
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json",
                 params={"estado": estado},
             )
             resp.raise_for_status()
@@ -882,7 +881,7 @@ async def gateway_pendientes_json_npl(
     try:
         async with httpx.AsyncClient(timeout=360.0) as client:
             resp = await client.get(
-                f"{MICRO_URLS['WHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-npl",
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-npl",
                 params={"estado": estado},
             )
             resp.raise_for_status()
@@ -904,9 +903,9 @@ async def gateway_pendientes_json_adamantine(
     if not (HORA_INICIO <= ahora_bo < HORA_FIN):
         return JSONResponse(status_code=200, content=[])
     try:
-        async with httpx.AsyncClient(timeout=3000.0) as client:
+        async with httpx.AsyncClient(timeout=30000.0) as client:
             resp = await client.get(
-                f"{MICRO_URLS['WHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-jcap",
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-jcap",
                 params={"estado": estado},
             )
             resp.raise_for_status()
@@ -920,10 +919,57 @@ async def gateway_pendientes_json_adamantine(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@router.get("/MensajeWhatsApp/pendientes-json-adamantine", tags=["Mensaje WhatsApp"])
+async def gateway_pendientes_json_adamantine(
+    estado: str = Query("ENVIADO", description="Estado a marcar cuando se entregue al RPA")
+):
+    ahora_bo = datetime.now(TZ).time()
+    if not (HORA_INICIO <= ahora_bo < HORA_FIN):
+        return JSONResponse(status_code=200, content=[])
+    try:
+        async with httpx.AsyncClient(timeout=3000.0) as client:
+            resp = await client.get(
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-adamantine",
+                params={"estado": estado},
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        try:
+            detalle = e.response.json()
+        except ValueError:
+            detalle = {"detail": e.response.text}
+        return JSONResponse(status_code=e.response.status_code, content=detalle)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
+@router.get("/MensajeWhatsApp/pendientes-json-credivalores", tags=["Mensaje WhatsApp"])
+async def gateway_pendientes_json_credivalores(
+    estado: str = Query("ENVIADO", description="Estado a marcar cuando se entregue al RPA")
+):
+    ahora_bo = datetime.now(TZ).time()
+    if not (HORA_INICIO <= ahora_bo < HORA_FIN):
+        return JSONResponse(status_code=200, content=[])
+    try:
+        async with httpx.AsyncClient(timeout=3000.0) as client:
+            resp = await client.get(
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/pendientes-json-credivalores",
+                params={"estado": estado},
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        try:
+            detalle = e.response.json()
+        except ValueError:
+            detalle = {"detail": e.response.text}
+        return JSONResponse(status_code=e.response.status_code, content=detalle)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @router.get("/ClientesEnvioWhatsApp", tags=["Mensaje WhatsApp"])
 async def gw_clientes_envio_top():
-    url = f"{MICRO_URLS['WHATSAPP']}/enviowhatsapp_api/whatsapp/clientes"
+    url = f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/clientes"
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.get(url)
@@ -934,6 +980,74 @@ async def gw_clientes_envio_top():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+TRUE_SET  = {"1","si","sí","s","y","yes","true","verdadero","t","on"}
+FALSE_SET = {"0","no","n","false","falso","f","off"}
+
+def _normalize_si_no(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        raise ValueError("Valor 'tiene_whatsapp' vacío o nulo")
+
+    if isinstance(value, (int, float)):
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+
+    s = str(value).strip().lower()
+    if s in TRUE_SET:
+        return True
+    if s in FALSE_SET:
+        return False
+    raise ValueError(f"Valor 'tiene_whatsapp' no reconocido: {value!r}")
+
+@router.post("/MensajeWhatsApp/actualizar-tiene", tags=["Mensaje WhatsApp"])
+async def gateway_actualizar_tiene_whatsapp_json(request: Request):
+    try:
+        body: Dict[str, Any] = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"JSON inválido: {e}")
+
+    numero = (body.get("numero") or "").strip()
+    if not numero:
+        raise HTTPException(status_code=422, detail="Falta o vacío: 'numero'")
+
+    if "tiene_whatsapp" not in body:
+        raise HTTPException(status_code=422, detail="Falta campo 'tiene_whatsapp'")
+
+    try:
+        tiene_bool = _normalize_si_no(body.get("tiene_whatsapp"))
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+
+    payload = {"numero": numero, "tiene_whatsapp": tiene_bool}
+
+
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{MICRO_URLS['MENSAJESWHATSAPP']}/enviowhatsapp_api/whatsapp/actualizar-tiene",
+                json=payload
+            )
+            resp.raise_for_status()
+            # Retorna tal cual la respuesta del micro
+            try:
+                return resp.json()
+            except ValueError:
+                # Si el micro devolviera texto plano
+                return JSONResponse(status_code=resp.status_code, content={"detail": resp.text})
+
+    except httpx.HTTPStatusError as e:
+        # Burbujea el código y el detalle del micro
+        try:
+            detalle = e.response.json()
+        except ValueError:
+            detalle = {"detail": e.response.text}
+        return JSONResponse(status_code=e.response.status_code, content=detalle)
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 #----------- ACUERDO DE PAGO -----------------------------------------------------------
 @router.post("/excel/guardarAcuerdoPago", tags=["Acuerdo Pago"])
@@ -995,7 +1109,7 @@ async def gateway_obtener_dni_random(
 @router.api_route("/acuerdos/enviada", methods=["GET", "POST"], tags=["Acuerdo Pago"])
 async def gateway_marcar_enviada_y_devolver(
     solo_activos: bool = Query(default=True),
-    exige_estado: Optional[str] = Query(default="ACTIVO"),
+    exige_estado: Optional[str] = Query(default="PENDIENTE"),
 ):
     """
     Llama al micro, que marca y devuelve el registro actualizado.

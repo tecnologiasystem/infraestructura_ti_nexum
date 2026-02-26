@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaNuevaEps.css";
 
 const RpaNuevaEps = () => {
@@ -38,7 +38,7 @@ const RpaNuevaEps = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/nuevaeps_api/detalle/listar_agrupadoNuevaEps`
+        `${API_URL_GATEWAY_RPA}/gateway/nuevaeps_api/detalle/listar_agrupadoNuevaEps`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -51,7 +51,7 @@ const RpaNuevaEps = () => {
   // ====== Resumen real (procesados / total) ======
   const fetchResumen = async (idEncabezado) => {
     const res = await fetch(
-      `${API_URL_GATEWAY}/gateway/Salud/automatizacionesNuevaEps/${idEncabezado}/resumen`
+      `${API_URL_GATEWAY_RPA}/gateway/Salud/automatizacionesNuevaEps/${idEncabezado}/resumen`
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
@@ -66,7 +66,7 @@ const RpaNuevaEps = () => {
     try {
       const offset = (page - 1) * pageSize;
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Salud/listarAutomatizacionesNuevaEps?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Salud/listarAutomatizacionesNuevaEps?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -112,7 +112,7 @@ const RpaNuevaEps = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionNuevaEps`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionNuevaEps`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -148,7 +148,7 @@ const RpaNuevaEps = () => {
     setDetailsLoading(true);
     try {
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Salud/automatizacionesNuevaEps/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Salud/automatizacionesNuevaEps/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -199,7 +199,7 @@ const RpaNuevaEps = () => {
 //}, []);
 
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/nuevaeps_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/nuevaeps_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -208,7 +208,7 @@ const RpaNuevaEps = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/nuevaeps_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/nuevaeps_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -234,7 +234,7 @@ const RpaNuevaEps = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaNuevaEps`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaNuevaEps`
                 );
               }}
             >
@@ -252,7 +252,7 @@ const RpaNuevaEps = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarNuevaEps`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarNuevaEps`,
                     { method: "POST", body: formData }
                   );
 
@@ -461,7 +461,7 @@ const RpaNuevaEps = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosNuevaEps?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosNuevaEps?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

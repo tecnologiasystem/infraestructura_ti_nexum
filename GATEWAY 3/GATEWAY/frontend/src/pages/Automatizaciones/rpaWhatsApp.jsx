@@ -9,9 +9,14 @@ import {
   Input,
   Progress,
   Typography,
+  Space,
+  Tag,
+  Statistic,
+  Tooltip
 } from "antd";
-import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { UploadOutlined, ReloadOutlined, FileExcelOutlined, DashboardOutlined } from "@ant-design/icons";
+import { API_URL_GATEWAY_RPA } from "../../config";
+import * as XLSX from 'xlsx';
 import "./rpaWhatsApp.css";
 
 const RpaWhatsApp = () => {
@@ -23,12 +28,18 @@ const RpaWhatsApp = () => {
   const [detalleFiltrado, setDetalleFiltrado] = useState([]);
   const [subiendo, setSubiendo] = useState(false);
   const [pausedEncabezado, setPausedEncabezado] = useState(null);
+  const [estadisticasVisible, setEstadisticasVisible] = useState(false);
+  const [estadisticas, setEstadisticas] = useState({
+    procesados: 0,
+    pendientes: 0,
+    datos: []
+  });
 
   // ========= Data base =========
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/WhatsApp_api/detalle/listar_agrupadoWhatsApp`
+        `${API_URL_GATEWAY_RPA}/gateway/WhatsApp_api/detalle/listar_agrupadoWhatsApp`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -38,11 +49,51 @@ const RpaWhatsApp = () => {
     }
   };
 
+  // ========= Estadísticas WhatsApp =========
+  const cargarEstadisticas = async () => {
+    try {
+      // Obtener números validados
+      const res = await fetch(
+        `${API_URL_GATEWAY_RPA}/gateway/WhatsApp_api/detalle/validados?idEncabezado=44`
+      );
+      const { data, pendientes } = await res.json();
+      
+      setEstadisticas({
+        procesados: data?.length || 0,
+        pendientes: pendientes || 0,
+        datos: data || []
+      });
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+      message.error("Error al cargar estadísticas de WhatsApp");
+    }
+  };
+
+  const exportarExcel = () => {
+    try {
+      const exportRows = estadisticas.datos.map(r => ({
+        Numero: r.numero,
+        Tiene_WhatsApp: r.tiene_whatsApp,
+        Fecha_Validacion: r.fecha_validacion
+      }));
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportRows);
+      XLSX.utils.book_append_sheet(wb, ws, "Validados");
+      XLSX.writeFile(wb, `Numeros_WhatsApp_Validados_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      message.success("Excel exportado correctamente");
+    } catch (error) {
+      console.error("Error al exportar:", error);
+      message.error("No se pudo exportar a Excel");
+    }
+  };
+
   // ========= Encabezados / progreso =========
   const cargarAutomatizaciones = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/WhatsApp/listarAutomatizacionesWhatsApp`
+        `${API_URL_GATEWAY_RPA}/gateway/WhatsApp/listarAutomatizacionesWhatsApp`
       );
       const data = await res.json();
 
@@ -63,7 +114,7 @@ const RpaWhatsApp = () => {
   const refrescarProgreso = async (idEncabezado) => {
     try {
       const detalleRes = await fetch(
-        `${API_URL_GATEWAY}/gateway/WhatsApp/listarAutomatizacionesDetalleWhatsApp?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/WhatsApp/listarAutomatizacionesDetalleWhatsApp?id_encabezado=${idEncabezado}`
       );
       const detalleData = await detalleRes.json();
 
@@ -79,7 +130,7 @@ const RpaWhatsApp = () => {
       if (porcentaje === 100) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionWhatsApp`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionWhatsApp`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -115,7 +166,7 @@ const RpaWhatsApp = () => {
   const verDetalleAutomatizacion = async (idEncabezado) => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/WhatsApp/listarAutomatizacionesDetalleWhatsApp?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/WhatsApp/listarAutomatizacionesDetalleWhatsApp?id_encabezado=${idEncabezado}`
       );
       const data = await res.json();
 
@@ -151,6 +202,7 @@ const RpaWhatsApp = () => {
   useEffect(() => {
     cargarDatosDesdeBD();
     cargarAutomatizaciones();
+    cargarEstadisticas();
   }, []);
 
   // ========= Filtros =========
@@ -165,7 +217,7 @@ const RpaWhatsApp = () => {
 
   // ========= Pausa / Reanudar =========
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/WhatsApp_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/WhatsApp_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -174,7 +226,7 @@ const RpaWhatsApp = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/WhatsApp_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/WhatsApp_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -201,7 +253,7 @@ const RpaWhatsApp = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaWhatsApp`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaWhatsApp`
                 );
               }}
             >
@@ -219,7 +271,7 @@ const RpaWhatsApp = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarWhatsApp`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarWhatsApp`,
                     {
                       method: "POST",
                       body: formData,
@@ -387,13 +439,54 @@ const RpaWhatsApp = () => {
         )}
       </Card>
 
+      {/* Modal de Estadísticas */}
+      <Modal
+        className="rpa-modal"
+        title="Estadísticas de Validación WhatsApp"
+        open={estadisticasVisible}
+        onCancel={() => setEstadisticasVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setEstadisticasVisible(false)}>
+            Cerrar
+          </Button>,
+          <Button 
+            key="export" 
+            type="primary" 
+            icon={<FileExcelOutlined />}
+            onClick={exportarExcel}
+          >
+            Exportar Validados
+          </Button>
+        ]}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '24px' }}>
+            <Statistic
+              title="Números Validados"
+              value={estadisticas.procesados}
+              suffix={<Tag color="green">✓</Tag>}
+            />
+            <Statistic
+              title="Números Pendientes"
+              value={estadisticas.pendientes}
+              suffix={<Tag color="orange">...</Tag>}
+            />
+          </div>
+          
+          <Typography.Paragraph type="secondary" style={{ textAlign: 'center' }}>
+            Los datos se actualizan automáticamente cada vez que abres esta ventana.
+            Usa el botón de exportar para descargar el detalle de los números validados.
+          </Typography.Paragraph>
+        </Space>
+      </Modal>
+
       {/* Modal de Detalle */}
       <Modal
         className="rpa-modal"
         title={`Detalle automatización ${
           detalleAutomatizacion?.automatizacion || ""
         }`}
-        visible={modalDetalleVisible} // usa "open" si antd v5
+        visible={modalDetalleVisible}
         onCancel={() => setModalDetalleVisible(false)}
         footer={null}
         width={1000}
@@ -413,7 +506,7 @@ const RpaWhatsApp = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosWhatsApp?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosWhatsApp?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

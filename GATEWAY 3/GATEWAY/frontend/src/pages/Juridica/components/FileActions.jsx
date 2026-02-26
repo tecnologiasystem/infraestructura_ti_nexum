@@ -3,7 +3,7 @@ import { Upload, Button, Space, message } from "antd";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_RPA } from "../../../config";
 
 const FileActions = ({ tabKey, onFileLoad, onVariablesLoad, onDataExtracted, onExcelNameLoad }) => {
   const handleExcelUpload = async ({ file, onSuccess, onError }) => {
@@ -11,7 +11,7 @@ const FileActions = ({ tabKey, onFileLoad, onVariablesLoad, onDataExtracted, onE
       const formData = new FormData();
       formData.append("file", file);
 
-      const uploadResponse = await fetch(`${API_URL_GATEWAY}/gateway/juridica/upload_preforma_impulso`, {
+      const uploadResponse = await fetch(`${API_URL_GATEWAY_RPA}/gateway/juridica/upload_preforma_impulso`, {
         method: "POST",
         body: formData,
       });

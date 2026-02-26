@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 import {
@@ -20,7 +20,7 @@ const GraficoCommitment = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API_URL_GATEWAY}/gateway/embudo/commitments-acumulados`)
+    axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/embudo/commitments-acumulados`)
       .then(res => setData(res.data));
   }, []);
 

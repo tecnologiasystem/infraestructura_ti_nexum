@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaSimit.css";
 
 const RpaSimit = () => {
@@ -41,7 +41,7 @@ const RpaSimit = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/simit_api/detalle/listar_agrupadoSimit`
+        `${API_URL_GATEWAY_RPA}/gateway/simit_api/detalle/listar_agrupadoSimit`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -56,13 +56,13 @@ const RpaSimit = () => {
     // 1) endpoint nuevo de resumen (si existe en tu gateway)
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizacionesSimit/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizacionesSimit/${idEncabezado}/resumen`
       );
       if (res.ok) return await res.json(); // { procesados, totalRegistros }
     } catch (_) {}
     // 2) fallback: contar desde el detalle actual
     const detalleRes = await fetch(
-      `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleSimit?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleSimit?id_encabezado=${idEncabezado}`
     );
     const detalleData = await detalleRes.json();
     const procesados = (detalleData?.detalles || []).filter(
@@ -83,7 +83,7 @@ const RpaSimit = () => {
 
       // 1) intenta endpoint paginado del gateway (retrocompat si devuelve array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesSimit?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesSimit?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -128,7 +128,7 @@ const RpaSimit = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionSimit`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionSimit`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -165,7 +165,7 @@ const RpaSimit = () => {
     try {
       // 1) endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizacionesSimit/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizacionesSimit/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -189,7 +189,7 @@ const RpaSimit = () => {
 
       // 2) fallback: endpoint actual (todo) + filtrar/paginar en front
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleSimit?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleSimit?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // {detalles:[...]}
       const base = (full?.detalles || [])
@@ -230,7 +230,7 @@ const RpaSimit = () => {
 
   // ===== pausar / reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/simit_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/simit_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -239,7 +239,7 @@ const RpaSimit = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/simit_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/simit_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -270,7 +270,7 @@ const RpaSimit = () => {
             <Button
               className="rpa-btn-primary"
               onClick={() =>
-                window.open(`${API_URL_GATEWAY}/gateway/excel/plantillaSimit`)
+                window.open(`${API_URL_GATEWAY_RPA}/gateway/excel/plantillaSimit`)
               }
             >
               Descargar plantilla
@@ -286,7 +286,7 @@ const RpaSimit = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarSimit`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarSimit`,
                     {
                       method: "POST",
                       body: formData,
@@ -498,7 +498,7 @@ const RpaSimit = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosSimit?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosSimit?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

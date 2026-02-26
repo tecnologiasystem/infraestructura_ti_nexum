@@ -8,6 +8,7 @@ import asyncio
 from app.bll.monitor_rpa_bll import verificar_inactividad
 from app.api.parametros_api import router as parametro_router
 from app.api.gateway_rpa_api import router as gateway_rpa
+from app.api.whatsapp_api import router as whatsapp_router
 
 app = FastAPI(
     title="Gateway Nexum",
@@ -24,12 +25,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+#3001
 
 app.include_router(router, prefix="/gateway")
 app.include_router(monitor_rpa)
 app.include_router(parametro_router, prefix="/parametro")
 app.include_router(gateway_rpa, prefix="/gateway-rpa")
+app.include_router(whatsapp_router, prefix="/api")
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(lambda: asyncio.run(verificar_inactividad()), "interval", minutes=10)

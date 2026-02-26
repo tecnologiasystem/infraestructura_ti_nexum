@@ -26,7 +26,7 @@ const TableroEmbudo = () => {
   };
 
   return (
-    <div style={{ padding: '1rem' }}>
+    <div style={{ padding: '1rem', marginTop: '4rem'}}>
       <h1 style={{ textAlign: 'center', color:'#000F9F' }}>Tablero de Control Contacto</h1>
       <Tabs
         defaultActiveKey="donut"

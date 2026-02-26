@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaFamisanar.css";
 //import InfoPopup from "../../components/InfoPopup";
 
@@ -57,7 +57,7 @@ const RpaFamiSanar = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/famisanar_api/detalle/listar_agrupadoFamiSanar`
+        `${API_URL_GATEWAY_RPA}/gateway/famisanar_api/detalle/listar_agrupadoFamiSanar`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -70,14 +70,14 @@ const RpaFamiSanar = () => {
   const fetchResumen = async (idEncabezado) => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Salud/automatizacionesFamiSanar/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Salud/automatizacionesFamiSanar/${idEncabezado}/resumen`
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (e) {
       try {
         const r = await fetch(
-          `${API_URL_GATEWAY}/gateway/Salud/listarAutomatizacionesDetalleFamiSanar?id_encabezado=${idEncabezado}`
+          `${API_URL_GATEWAY_RPA}/gateway/Salud/listarAutomatizacionesDetalleFamiSanar?id_encabezado=${idEncabezado}`
         );
         const data = await r.json();
         const procesados = (data?.detalles || []).filter(
@@ -104,7 +104,7 @@ const RpaFamiSanar = () => {
     try {
       const offset = (page - 1) * pageSize;
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Salud/listarAutomatizacionesFamiSanar?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Salud/listarAutomatizacionesFamiSanar?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -150,7 +150,7 @@ const RpaFamiSanar = () => {
       if (porcentaje === 100) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionFamiSanar`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionFamiSanar`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -185,7 +185,7 @@ const RpaFamiSanar = () => {
     setDetailsLoading(true);
     try {
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Salud/automatizacionesFamiSanar/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Salud/automatizacionesFamiSanar/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -250,7 +250,7 @@ const RpaFamiSanar = () => {
   );
 
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/famisanar_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/famisanar_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -259,7 +259,7 @@ const RpaFamiSanar = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/famisanar_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/famisanar_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -292,7 +292,7 @@ const RpaFamiSanar = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaFamiSanar`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaFamiSanar`
                 );
               }}
             >
@@ -310,7 +310,7 @@ const RpaFamiSanar = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarFamiSanar`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarFamiSanar`,
                     { method: "POST", body: formData }
                   );
 
@@ -519,7 +519,7 @@ const RpaFamiSanar = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosFamiSanar?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosFamiSanar?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

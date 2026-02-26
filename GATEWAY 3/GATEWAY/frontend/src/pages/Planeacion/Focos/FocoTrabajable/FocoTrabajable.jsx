@@ -13,7 +13,7 @@ import {
   Modal,
 } from "antd";
 import { SearchOutlined, ReloadOutlined, SendOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../../config";
+import { API_URL_GATEWAY_RPA } from "../../../../config";
 
 const { Panel } = Collapse;
 const { Option } = Select;
@@ -33,7 +33,7 @@ const CargueFocos = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/focos/trabajable/consultar`, {
+      const response = await fetch(`${API_URL_GATEWAY_RPA}/gateway/focos/trabajable/consultar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -123,7 +123,7 @@ const CargueFocos = () => {
       }));
 
       for (const row of payload) {
-        await fetch(`${API_URL_GATEWAY}/gateway/focos/resultado/insertar`, {
+        await fetch(`${API_URL_GATEWAY_RPA}/gateway/focos/resultado/insertar`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(row),

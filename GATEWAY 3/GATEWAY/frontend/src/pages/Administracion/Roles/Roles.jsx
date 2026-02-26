@@ -18,7 +18,7 @@ import {
   CloseOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../config";
 import "./Roles.css";
 
 const Roles = () => {
@@ -45,7 +45,7 @@ const Roles = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL_GATEWAY}/gateway/roles/dar`);
+      const res = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/roles/dar`);
       const json = await res.json();
       setData(Array.isArray(json.roles) ? json.roles : []);
     } catch (error) {
@@ -57,7 +57,7 @@ const Roles = () => {
 
   const fetchPermisosPorRol = async (idRol) => {
     try {
-      const res = await fetch(`${API_URL_GATEWAY}/gateway/porRol?idRol=${idRol}`);
+      const res = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/porRol?idRol=${idRol}`);
       const permisos = await res.json();
       setPermisosRol(Array.isArray(permisos) ? permisos : []);
     } catch (error) {
@@ -87,8 +87,8 @@ const Roles = () => {
       ...(editingRecord && { idRol: editingRecord.idRol }),
     };
     const url = editingRecord
-      ? `${API_URL_GATEWAY}/gateway/roles/editar`
-      : `${API_URL_GATEWAY}/gateway/roles/crear`;
+      ? `${API_URL_GATEWAY_CONNECT}/gateway/roles/editar`
+      : `${API_URL_GATEWAY_CONNECT}/gateway/roles/crear`;
     const method = editingRecord ? "PUT" : "POST";
 
     try {
@@ -114,7 +114,7 @@ const Roles = () => {
   };
   const handleDelete = async (idRol) => {
     try {
-      await fetch(`${API_URL_GATEWAY}/gateway/roles/eliminar`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/roles/eliminar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idRol }),
@@ -129,7 +129,7 @@ const Roles = () => {
 
   const handleActivate = async (idRol) => {
     try {
-      await fetch(`${API_URL_GATEWAY}/gateway/roles/activar`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/roles/activar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idRol }),
@@ -207,8 +207,8 @@ const Roles = () => {
     try {
       const res = await fetch(
         isNuevo
-          ? `${API_URL_GATEWAY}/gateway/`
-          : `${API_URL_GATEWAY}/gateway/${editingPermiso.id}`,
+          ? `${API_URL_GATEWAY_CONNECT}/gateway/`
+          : `${API_URL_GATEWAY_CONNECT}/gateway/${editingPermiso.id}`,
         {
           method: isNuevo ? "POST" : "PUT",
           headers: { "Content-Type": "application/json" },
@@ -230,7 +230,7 @@ const Roles = () => {
   
   const handleDeletePermiso = async (permiso) => {
     try {
-      await fetch(`${API_URL_GATEWAY}/gateway/${permiso.id}`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/${permiso.id}`, {
         method: "DELETE",
       });
       notification.success({ message: "Permiso eliminado correctamente" });

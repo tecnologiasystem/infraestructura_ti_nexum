@@ -5,7 +5,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 
 
 export default function EmbudoContactabilidad() {
@@ -14,7 +14,7 @@ export default function EmbudoContactabilidad() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL_GATEWAY}/gateway/embudo/funnel`)
+    fetch(`${API_URL_GATEWAY_CONNECT}/gateway/embudo/funnel`)
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(json => {
         const ordered = json.sort((a, b) => b.cnt - a.cnt);

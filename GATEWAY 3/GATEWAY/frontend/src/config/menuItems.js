@@ -167,11 +167,19 @@ const menuItems = [
         description: 'Rpa Mensajes WhatsApp',
         roles: [1],
       },
+        {
+    key: '/mensajesWhatsApp',
+    path: '/mensajesWhatsApp',
+        label: 'Mensajes WhatsApp',
+        icon: 'WhatsAppOutlined',
+        description: 'Envia mensajes de WhatsApp personalizados masivamente',
+        roles: [1],
+      },
     ],
   },
    {
     key: 'gail',
-    label: 'GAIL',
+    label: 'Gestión Campañas',
     icon: 'CalendarOutlined',
     path: '/gail',
     roles: [1],
@@ -179,9 +187,9 @@ const menuItems = [
       {
         key: 'campañas',
         path: '/gail/campañas',
-        label: 'Campañas Gail',
+        label: 'Gestión Campañas',
         icon: 'UploadOutlined',
-        description: 'Crear Campaña en Gail',
+        description: 'Crear Campaña de Gestión',
         roles: [1],
       },
       {
@@ -229,6 +237,14 @@ const menuItems = [
       },
     ],
   },
+  {
+        key: '/CRM',
+        path: '/CRM',
+        label: 'CRM',
+        icon: 'BarChartOutlined',
+        description: 'CRM',
+        roles: [1],
+      },
   {
     key: 'notificaciones',
     label: 'Notificaciones',
@@ -289,8 +305,23 @@ const menuItems = [
       },
     ],
   },
-  {
-  
+ {
+    key: '/Correos',
+    path: '/Correos',
+    label: 'Correos',
+    icon: 'MailOutlined',
+    description: 'Gestión de Correos',
+    roles: [1, 12],
+    children: [
+      {
+        key: '/ImagenClick',
+        path: '/ImagenClick',
+        label: 'Imagen Click',
+        icon: 'SolutionOutlined',
+        description: 'Envía correos con imágenes personalizadas',
+        roles: [1],
+      },
+      {
         key: '/EmailMasivo',
         path: '/EmailMasivo',
         label: 'Email Masivo',
@@ -298,25 +329,30 @@ const menuItems = [
         description: 'Envia correos personalizados masivamente',
         roles: [1],
       },
-    
-  
+    ],
+  },
+
+
+  {
+    key: '/Teseo',
+    path: '/Teseo',
+    label: 'Teseo',
+    icon: 'MailOutlined',
+    description: 'Funcionalidades Teseo',
+    roles: [1, 12],
+    children: [
       {
-        key: '/mensajesWhatsApp',
-        path: '/mensajesWhatsApp',
-        label: 'Mensajes WhatsApp',
-        icon: 'WhatsAppOutlined',
-        description: 'Envia mensajes de WhatsApp personalizados masivamente',
+        key: '/gestionesTeseo',
+        path: '/gestionesTeseo',
+        label: 'Gestiones Teseo',
+        icon: 'SolutionOutlined',
+        description: 'Gestiones Teseo',
         roles: [1],
       },
-    
-      {
-        key: '/acuerdoPago',
-        path: '/acuerdoPago',
-        label: 'Cargue Acuerdo de Pago',
-        icon: 'UploadOutlined',
-        description: 'Cargue Acuerdo de Pago a Teseo',
-        roles: [1],
-      },
+    ],
+  },
+
+
   
 ];
 

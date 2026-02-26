@@ -11,12 +11,12 @@ import {
 } from "antd";
 import { UploadOutlined, SendOutlined } from "@ant-design/icons";
 import * as XLSX from 'xlsx';
-import { API_URL_GATEWAY } from "../../config";
-import "./AcuerdoPago.css";
+import { API_URL_GATEWAY_RPA } from "../../config";
+import "./GestionTeseo.css";
 
 const { Title, Text } = Typography;
 
-const AcuerdoPago = () => {
+const GestionTeseo = () => {
   const [excelData, setExcelData] = useState([]);
   const [excelColumns, setExcelColumns] = useState([]);
   const [fileName, setFileName] = useState("");
@@ -108,7 +108,7 @@ const AcuerdoPago = () => {
       formData.append("idUsuario", myId);
 
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/excel/guardarAcuerdoPago`,
+        `${API_URL_GATEWAY_RPA}/gateway/excel/guardarGestiones`,
         {
           method: "POST",
           body: formData,
@@ -152,7 +152,7 @@ const AcuerdoPago = () => {
         {/* Sección de carga de archivo */}
         <Card className="upload-card">
           <Title level={4}>
-            Acuerdos de Pago
+            Gestiones Teseo
           </Title>
           
           <div className="upload-section">
@@ -246,4 +246,4 @@ const AcuerdoPago = () => {
   );
 };
 
-export default AcuerdoPago;
+export default GestionTeseo;

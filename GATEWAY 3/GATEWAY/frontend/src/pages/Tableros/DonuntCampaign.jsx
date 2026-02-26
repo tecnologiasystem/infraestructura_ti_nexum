@@ -1,7 +1,7 @@
 // src/components/DonutCampaign.jsx
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 
 
 export default function DonutCampaign() {
@@ -28,7 +28,7 @@ useEffect(() => {
     return;
   }
 
-  fetch(`${API_URL_GATEWAY}/gateway/embudo/by-campaign?idUsuario=${idUsuario}&rol=${rol}`)
+  fetch(`${API_URL_GATEWAY_CONNECT}/gateway/embudo/by-campaign?idUsuario=${idUsuario}&rol=${rol}`)
     .then(res => {
       if (!res.ok) throw new Error(`Error ${res.status}`);
       return res.json();

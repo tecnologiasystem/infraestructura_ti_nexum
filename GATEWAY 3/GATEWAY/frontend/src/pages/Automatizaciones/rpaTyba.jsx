@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaTyba.css";
 
 const RpaTyba = () => {
@@ -41,7 +41,7 @@ const RpaTyba = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/tyba_api/detalle/listar_agrupadoTyba`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/tyba_api/detalle/listar_agrupadoTyba`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -56,13 +56,13 @@ const RpaTyba = () => {
     // 1) endpoint nativo (si existe)
     try {
       const r = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Juridica/automatizacionesTyba/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/Juridica/automatizacionesTyba/${idEncabezado}/resumen`
       );
       if (r.ok) return await r.json(); // { procesados, totalRegistros }
     } catch (_) {}
     // 2) fallback: contar desde el detalle actual
     const detalleRes = await fetch(
-      `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleTyba?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway-rpa/Jurica/listarAutomatizacionesDetalleTyba?id_encabezado=${idEncabezado}`
     );
     const detalleData = await detalleRes.json();
     const base = (detalleData?.detalles || [])
@@ -92,7 +92,7 @@ const RpaTyba = () => {
 
       // 1) intenta endpoint paginado del gateway-rpa (retrocompat si devuelve array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesTyba?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/Jurica/listarAutomatizacionesTyba?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -137,7 +137,7 @@ const RpaTyba = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway-rpa/notificarFinalizacionTyba`,
+            `${API_URL_GATEWAY_RPA}/gateway-rpa/notificarFinalizacionTyba`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -174,7 +174,7 @@ const RpaTyba = () => {
     try {
       // 1) endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/automatizacionesTyba/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/Jurica/automatizacionesTyba/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -198,7 +198,7 @@ const RpaTyba = () => {
 
       // 2) fallback: endpoint actual (todo) + filtrar/paginar en front
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleTyba?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/Jurica/listarAutomatizacionesDetalleTyba?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // {detalles:[...]}
       const base = (full?.detalles || [])
@@ -248,7 +248,7 @@ const RpaTyba = () => {
 
   // ===== pausar / reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway-rpa/tyba_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway-rpa/tyba_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -257,7 +257,7 @@ const RpaTyba = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway-rpa/tyba_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway-rpa/tyba_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -290,7 +290,7 @@ const RpaTyba = () => {
               className="rpa-btn-primary"
               onClick={() =>
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/plantillaTyba`
+                  `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/plantillaTyba`
                 )
               }
             >
@@ -308,7 +308,7 @@ const RpaTyba = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway-rpa/excel/guardarTyba`,
+                    `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/guardarTyba`,
                     {
                       method: "POST",
                       body: formData,
@@ -520,7 +520,7 @@ const RpaTyba = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/exportar_resultadosTyba?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/exportar_resultadosTyba?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

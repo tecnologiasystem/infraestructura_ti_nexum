@@ -4,7 +4,7 @@ import { SearchOutlined, DownloadOutlined, DeleteOutlined } from "@ant-design/ic
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "./FocoResultado.css";
-import { API_URL_GATEWAY } from "../../../../config";
+import { API_URL_GATEWAY_RPA } from "../../../../config";
 
 const { Option } = Select;
 
@@ -61,7 +61,7 @@ const FocosResultado = () => {
     setDesdeBoton(true);
 
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/focos/resultado/consultar`, {
+      const response = await fetch(`${API_URL_GATEWAY_RPA}/gateway/focos/resultado/consultar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(filtros),

@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaMensajesWhatsApp.css";
 
 const RpaMensajesWhatsApp = () => {
@@ -28,7 +28,7 @@ const RpaMensajesWhatsApp = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/WhatsApp_api/detalle/listar_agrupadoMensajeWhatsApp`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/WhatsApp_api/detalle/listar_agrupadoMensajeWhatsApp`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -42,7 +42,7 @@ const RpaMensajesWhatsApp = () => {
   const cargarAutomatizaciones = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/WhatsApp/listarAutomatizacionesMensajeWhatsApp`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/WhatsApp/listarAutomatizacionesMensajeWhatsApp`
       );
       const data = await res.json();
 
@@ -63,7 +63,7 @@ const RpaMensajesWhatsApp = () => {
   const refrescarProgreso = async (idEncabezado) => {
     try {
       const detalleRes = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/WhatsApp/listarAutomatizacionesDetalleMensajeWhatsApp?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/WhatsApp/listarAutomatizacionesDetalleMensajeWhatsApp?id_encabezado=${idEncabezado}`
       );
       const detalleData = await detalleRes.json();
 
@@ -79,7 +79,7 @@ const RpaMensajesWhatsApp = () => {
       if (porcentaje === 100) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway-rpa/notificarFinalizacionMensajeWhatsApp`,
+            `${API_URL_GATEWAY_RPA}/gateway-rpa/notificarFinalizacionMensajeWhatsApp`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -115,7 +115,7 @@ const RpaMensajesWhatsApp = () => {
   const verDetalleAutomatizacion = async (idEncabezado) => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/WhatsApp/listarAutomatizacionesDetalleMensajeWhatsApp?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/WhatsApp/listarAutomatizacionesDetalleMensajeWhatsApp?id_encabezado=${idEncabezado}`
       );
       const data = await res.json();
 
@@ -183,7 +183,7 @@ const RpaMensajesWhatsApp = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/plantillaMensajeWhatsApp`
+                  `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/plantillaMensajeWhatsApp`
                 );
               }}
             >
@@ -201,7 +201,7 @@ const RpaMensajesWhatsApp = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway-rpa/excel/guardarMensajeWhatsApp`,
+                    `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/guardarMensajeWhatsApp`,
                     {
                       method: "POST",
                       body: formData,
@@ -373,7 +373,7 @@ const RpaMensajesWhatsApp = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/exportar_resultadosMensajeWhatsApp?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway-rpa/excel/exportar_resultadosMensajeWhatsApp?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

@@ -21,7 +21,7 @@ import {
   CloseOutlined,
   CheckOutlined
 } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../config";
 import "./usuarios.css";
 
 const { Search } = Input;
@@ -48,7 +48,7 @@ const ListarUsuarios = () => {
     const currentPath = location.pathname;
 
 
-    fetch(`${API_URL_GATEWAY}/gateway/porRol?idRol=${idRol}`)
+    fetch(`${API_URL_GATEWAY_CONNECT}/gateway/porRol?idRol=${idRol}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -72,11 +72,11 @@ const ListarUsuarios = () => {
   const fetchAllData = async () => {
     try {
       const [resUsuarios, resCampanas, resRoles, resAreas, resUsuariosCampanas] = await Promise.all([
-        fetch(`${API_URL_GATEWAY}/gateway/usuarios/dar`),
-        fetch(`${API_URL_GATEWAY}/gateway/campanas/dar`),
-        fetch(`${API_URL_GATEWAY}/gateway/roles/dar`),
-        fetch(`${API_URL_GATEWAY}/gateway/areas/dar`),
-        fetch(`${API_URL_GATEWAY}/gateway/usuariosCampanas/dar`)
+        fetch(`${API_URL_GATEWAY_CONNECT}/gateway/usuarios/dar`),
+        fetch(`${API_URL_GATEWAY_CONNECT}/gateway/campanas/dar`),
+        fetch(`${API_URL_GATEWAY_CONNECT}/gateway/roles/dar`),
+        fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/dar`),
+        fetch(`${API_URL_GATEWAY_CONNECT}/gateway/usuariosCampanas/dar`)
       ]);
 
       const [dataUsuarios, dataCampanas, dataRoles, dataAreas, dataUsuariosCampanas] = await Promise.all([
@@ -170,7 +170,7 @@ const ListarUsuarios = () => {
       }
 
       // 🆕 MODO CREACIÓN
-      const responseUser = await fetch(`${API_URL_GATEWAY}/gateway/usuarios/crear`, {
+      const responseUser = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/usuarios/crear`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -218,7 +218,7 @@ const ListarUsuarios = () => {
         }
       }      
       
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/usuarios/editar`, {
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/usuarios/editar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -253,7 +253,7 @@ const ListarUsuarios = () => {
   const handleActivateToggle = async (record) => {
     try {
       const endpoint = record.activo ? "eliminar" : "activar";
-      await fetch(`${API_URL_GATEWAY}/gateway/usuarios/${endpoint}`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/usuarios/${endpoint}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUsuarioApp: record.idUsuarioApp })

@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaVigencia.css";
 
 const RpaVigencia = () => {
@@ -27,7 +27,7 @@ const RpaVigencia = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/vigenciaJuridico_api/detalle/listar_agrupadoVigencia`
+        `${API_URL_GATEWAY_RPA}/gateway/vigenciaJuridico_api/detalle/listar_agrupadoVigencia`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -41,7 +41,7 @@ const RpaVigencia = () => {
   const cargarAutomatizaciones = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesVigencia`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesVigencia`
       );
       const data = await res.json();
 
@@ -49,7 +49,7 @@ const RpaVigencia = () => {
       const automationsWithProgress = await Promise.all(
         data.map(async (auto) => {
           const detalleRes = await fetch(
-            `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${auto.idEncabezado}`
+            `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${auto.idEncabezado}`
           );
           const detalleData = await detalleRes.json();
 
@@ -81,7 +81,7 @@ const RpaVigencia = () => {
   const refrescarProgreso = async (idEncabezado) => {
     try {
       const detalleRes = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${idEncabezado}`
       );
       const detalleData = await detalleRes.json();
 
@@ -99,7 +99,7 @@ const RpaVigencia = () => {
         const myId = localStorage.getItem("idUsuario");
 
         await fetch(
-          `${API_URL_GATEWAY}/gateway-rpa/notificarFinalizacionVigencia`,
+          `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionVigencia`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -144,7 +144,7 @@ const RpaVigencia = () => {
   const verDetalleAutomatizacion = async (idEncabezado) => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway-rpa/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleVigencia?id_encabezado=${idEncabezado}`
       );
       const data = await res.json();
 
@@ -200,7 +200,7 @@ const RpaVigencia = () => {
 
   const handlePause = async (id) => {
     await fetch(
-      `${API_URL_GATEWAY}/gateway-rpa/vigenciaJuridico_api/pausar/${id}`,
+      `${API_URL_GATEWAY_RPA}/gateway/vigenciaJuridico_api/pausar/${id}`,
       { method: "POST" }
     );
     setPausedEncabezado(id);
@@ -210,7 +210,7 @@ const RpaVigencia = () => {
 
   const handleResume = async (id) => {
     await fetch(
-      `${API_URL_GATEWAY}/gateway-rpa/vigenciaJuridico_api/reanudar/${id}`,
+      `${API_URL_GATEWAY_RPA}/gateway/vigenciaJuridico_api/reanudar/${id}`,
       { method: "POST" }
     );
     setPausedEncabezado(null);
@@ -227,7 +227,7 @@ const RpaVigencia = () => {
             RPA Verificación de Vigencia de Cédulas
           </h1>
           <p className="excel-description">
-            Automatización del proceso de consulta de vigencia de cédulas.
+            Automatización del proceso de consulta de validación de vigencia de cédulas.
           </p>
         </div>
 
@@ -238,7 +238,7 @@ const RpaVigencia = () => {
               className="rpa-btn-primary"
               onClick={() =>
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/plantillaVigencia`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaVigencia`
                 )
               }
             >
@@ -256,7 +256,7 @@ const RpaVigencia = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway-rpa/excel/guardarVigencia`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarVigencia`,
                     {
                       method: "POST",
                       body: formData,
@@ -450,7 +450,7 @@ const RpaVigencia = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway-rpa/excel/exportar_resultadosVigencia?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosVigencia?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

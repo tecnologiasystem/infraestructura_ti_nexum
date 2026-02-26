@@ -3243,8 +3243,7 @@ async def gw_resumen_encabezado(id_encabezado: int):
         r = await client.get(f"{MICRO_URLS['SALUD']}/famisanar_api/automatizacionesFamiSanar/{id_encabezado}/resumen")
         r.raise_for_status()
         return r.json()
-#------------- TABLEROS -----------------------------
-    
+#------------- TABLEROS -----------------------------  
 @router.get("/embudo/funnel")
 async def funnel():
     async with httpx.AsyncClient() as client:
@@ -4448,7 +4447,6 @@ async def gateway_darUsuarioCC():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-
 @router.post("/WhatsApp_api/automatizacion/resultado", tags=["WhatsApp"])
 async def gateway_guardar_resultado_automatizacion(request: Request):
     raw_body = await request.json()
@@ -4523,6 +4521,50 @@ async def gateway_notificar_finalizacion_WhatsApp(payload: dict):
             response = await client.post(f"{MICRO_URLS['WHATSAPP']}/numero_api/notificarFinalizacionWhatsApp", json=payload)
             response.raise_for_status()
             return response.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@router.get("/WhatsApp/stats", tags=["WhatsApp"])
+async def gateway_whatsapp_stats():
+    """
+    Obtiene estadísticas de validación de números de WhatsApp.
+    
+    Returns:
+        JSON con números validados y contador de pendientes
+    """
+    try:
+        from config.db_config import get_connection
+
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Obtener números validados
+        cur.execute("""
+            SELECT numero, tiene_whatsApp, fecha_validacion 
+            FROM [NEXUM].[dbo].[WhatsAppDetalle] WITH(NOLOCK)
+            WHERE tiene_whatsApp <> ''
+            AND idEncabezado = 44
+        """)
+        validados = [{"numero": row[0], "tiene_whatsApp": row[1], "fecha_validacion": row[2]} 
+                    for row in cur.fetchall()]
+
+        # Obtener contador de pendientes 
+        cur.execute("""
+            SELECT COUNT(*) as pendientes
+            FROM [NEXUM].[dbo].[WhatsAppDetalle] WITH(NOLOCK)
+            WHERE tiene_whatsApp = ''
+            AND idEncabezado = 44
+        """)
+        pendientes = cur.fetchone()[0]
+
+        cur.close()
+        conn.close()
+
+        return {
+            "data": validados,
+            "pendientes": pendientes
+        }
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
     
@@ -4906,6 +4948,127 @@ async def gw_listar_detalle(idEncabezado: int = Query(...)):
             r = await client.get(f"{MICRO_URLS['EMAIL']}/EmailEnvios/Detalle", params={"idEncabezado": idEncabezado})
             r.raise_for_status()
             return r.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/correos/exportarExcelPorEncabezado", tags=["Correos"])
+async def gateway_exportar_excel_por_encabezado(idEncabezado: int = Query(...)):
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{MICRO_URLS['EMAIL']}/EmailEnvios/ExportarExcelPorEncabezado",
+                params={"idEncabezado": idEncabezado}
+            )
+            resp.raise_for_status()
+            filename = resp.headers.get("content-disposition", 'attachment; filename="reporte.xlsx"')
+            return StreamingResponse(
+                io.BytesIO(resp.content),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": filename}
+            )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------- CRM ----------
+@router.get("/crm/conversaciones", tags=["CRM"])
+async def gw_listar_conversaciones(
+    user_id: str | None = Query(None),
+    is_active: bool | None = Query(None),
+    canal: str | None = Query(None),
+    campaign_id: int | None = Query(None),
+):
+    """
+    Proxy al microservicio CRM para listar conversaciones.
+    """
+    params: dict = {}
+    if user_id is not None:
+        params["user_id"] = user_id
+    if is_active is not None:
+        params["is_active"] = str(is_active).lower() 
+    if canal is not None:
+        params["canal"] = canal
+    if campaign_id is not None:
+        params["campaign_id"] = campaign_id
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{MICRO_URLS['CRM']}/crm/conversaciones",
+                params=params
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@router.get("/crm/conversaciones/detalle/{conversacion_id}", tags=["CRM"])
+async def gw_detalle_conversacion(conversacion_id: int):
+    """
+    Proxy al microservicio CRM para ver detalle de una conversación.
+    Incluye:
+      - datos de la conversación
+      - lista de mensajes
+      - resumen (ACUERDO/RECHAZO/EN_CONVERSACION)
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{MICRO_URLS['CRM']}/crm/conversaciones/detalle/{conversacion_id}"
+            )
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@router.get("/crm/conversaciones/export", tags=["CRM"])
+async def gw_export_conversaciones(
+    fecha_inicio: str | None = Query(None),
+    fecha_fin: str | None = Query(None),
+    campaign_id: str | None = Query(None),
+    intencion: str | None = Query(None),
+    canal: str | None = Query(None),
+):
+    params = {}
+
+    if fecha_inicio:
+        params["fecha_inicio"] = fecha_inicio
+    if fecha_fin:
+        params["fecha_fin"] = fecha_fin
+    if campaign_id and campaign_id.lower() != "nan":
+        params["campaign_id"] = campaign_id
+    if intencion:
+        params["intencion"] = intencion
+    if canal:
+        params["canal"] = canal
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{MICRO_URLS['CRM']}/crm/conversaciones/export",
+                params=params,
+            )
+            resp.raise_for_status()
+
+            content_disp = resp.headers.get(
+                "content-disposition",
+                'attachment; filename="crm_export.xlsx"'
+            )
+
+            return StreamingResponse(
+                io.BytesIO(resp.content),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": content_disp},
+            )
+
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:

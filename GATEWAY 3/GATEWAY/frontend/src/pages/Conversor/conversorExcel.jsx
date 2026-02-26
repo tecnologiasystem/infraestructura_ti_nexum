@@ -12,7 +12,7 @@ import {
   Radio,
 } from "antd";
 import { UploadOutlined, DownloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import "./conversorExcel.css";
@@ -129,7 +129,7 @@ const ConversorExcel = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL_GATEWAY}/gateway/excel/conversor`,
+        `${API_URL_GATEWAY_CONNECT}/gateway/excel/conversor`,
         formData,
         {
           responseType: "arraybuffer",
@@ -166,7 +166,7 @@ const ConversorExcel = () => {
 
   return (
     <div className="conversor-container">
-      <h1 className="excel-tittle">Conversor</h1>
+      <h1 className="excel-tittle" style={{ color: "rgb(12, 4, 82)" }}>Conversor</h1>
       <Spin spinning={cargando} tip="Procesando archivo...">
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           <Radio.Group

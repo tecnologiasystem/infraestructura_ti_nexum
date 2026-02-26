@@ -12,7 +12,7 @@ import {
   Alert,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaCamaraComercio.css";
 //import InfoPopup from "../../components/InfoPopup";
 
@@ -63,7 +63,7 @@ const RpaCamaraComercio = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/camaraComercio_api/detalle/listar_agrupadoCamaraComercio`
+        `${API_URL_GATEWAY_RPA}/gateway/camaraComercio_api/detalle/listar_agrupadoCamaraComercio`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -78,13 +78,13 @@ const RpaCamaraComercio = () => {
     // 1) endpoint nuevo (si ya lo tienes en el gateway)
     try {
       const r = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizacionesCamaraComercio/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizacionesCamaraComercio/${idEncabezado}/resumen`
       );
       if (r.ok) return await r.json(); // { procesados, totalRegistros }
     } catch (_) {}
     // 2) fallback: contar desde el detalle actual
     const detalleRes = await fetch(
-      `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleCamaraComercio?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleCamaraComercio?id_encabezado=${idEncabezado}`
     );
     const detalleData = await detalleRes.json();
     const base = (detalleData?.detalles || [])
@@ -123,7 +123,7 @@ const RpaCamaraComercio = () => {
 
       // 1) intenta endpoint paginado del gateway (si no existe, vendrá un array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesCamaraComercio?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesCamaraComercio?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -168,7 +168,7 @@ const RpaCamaraComercio = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionCamaraComercio`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionCamaraComercio`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -205,7 +205,7 @@ const RpaCamaraComercio = () => {
     try {
       // 1) endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizacionesCamaraComercio/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizacionesCamaraComercio/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -229,7 +229,7 @@ const RpaCamaraComercio = () => {
 
       // 2) fallback: endpoint actual (todo) + filtrar/paginar en front
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleCamaraComercio?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleCamaraComercio?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // {detalles:[...]}
       const base = (full?.detalles || [])
@@ -289,7 +289,7 @@ const RpaCamaraComercio = () => {
 
   // ===== pausar / reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/camaraComercio_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/camaraComercio_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -299,7 +299,7 @@ const RpaCamaraComercio = () => {
 
   const handleResume = async (id) => {
     await fetch(
-      `${API_URL_GATEWAY}/gateway/camaraComercio_api/reanudar/${id}`,
+      `${API_URL_GATEWAY_RPA}/gateway/camaraComercio_api/reanudar/${id}`,
       { method: "POST" }
     );
     setPausedEncabezado(null);
@@ -339,7 +339,7 @@ const RpaCamaraComercio = () => {
               className="rpa-btn-primary"
               onClick={() =>
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaCamaraComercio`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaCamaraComercio`
                 )
               }
             >
@@ -357,7 +357,7 @@ const RpaCamaraComercio = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarCamaraComercio`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarCamaraComercio`,
                     { method: "POST", body: formData }
                   );
 
@@ -586,7 +586,7 @@ const RpaCamaraComercio = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosCamaraComercio?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosCamaraComercio?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

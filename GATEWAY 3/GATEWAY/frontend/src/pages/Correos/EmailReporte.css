@@ -1,0 +1,334 @@
+/* EmailReporte.css - Estilos modernos para el reporte de correos */
+
+.email-reporte-container {
+  padding: 24px;
+  margin-top: 70px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: calc(100vh - 70px);
+  position: relative;
+}
+
+.email-reporte-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.3) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.email-reporte-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.email-reporte-header .ant-space {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.email-reporte-header h3 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  margin: 0 !important;
+}
+
+/* Botones modernos */
+.email-reporte-container .ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.email-reporte-container .ant-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.email-reporte-container .ant-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.email-reporte-container .ant-btn-default {
+  background: white;
+  color: #667eea;
+}
+
+/* Tabs modernos */
+.email-reporte-container .ant-tabs {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.email-reporte-container .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.email-reporte-container .ant-tabs-tab {
+  padding: 12px 24px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.email-reporte-container .ant-tabs-tab-active {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 8px;
+}
+
+.email-reporte-container .ant-tabs-ink-bar {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  height: 3px;
+  border-radius: 3px;
+}
+
+/* Cards con efecto glassmorphism */
+.email-reporte-container .ant-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.email-reporte-container .ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.email-reporte-container .ant-card-head {
+  background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+  font-weight: 600;
+}
+
+.email-reporte-container .ant-card-body {
+  padding: 20px;
+}
+
+/* Estadísticas con animación */
+.email-reporte-container .ant-statistic {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.email-reporte-container .ant-statistic-title {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.email-reporte-container .ant-statistic-content {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+/* Progress bars modernos */
+.email-reporte-container .ant-progress-bg {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.email-reporte-container .ant-progress-outer {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Tags con colores vibrantes */
+.email-reporte-container .ant-tag {
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.email-reporte-container .ant-tag-green {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.email-reporte-container .ant-tag-red {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.email-reporte-container .ant-tag-orange {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.email-reporte-container .ant-tag-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+/* Tablas modernas */
+.email-reporte-container .ant-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.email-reporte-container .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 2px solid #667eea30;
+}
+
+.email-reporte-container .ant-table-tbody > tr:hover > td {
+  background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+}
+
+.email-reporte-container .ant-table-tbody > tr > td {
+  transition: all 0.3s;
+}
+
+/* Filtros card */
+.filters-card {
+  background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  margin-bottom: 16px;
+}
+
+.filters-card .ant-card-body {
+  padding: 16px 20px;
+}
+
+/* Badge personalizado */
+.email-reporte-container .ant-badge-count {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Select y DatePicker modernos */
+.email-reporte-container .ant-select,
+.email-reporte-container .ant-picker {
+  border-radius: 8px;
+}
+
+.email-reporte-container .ant-select-selector,
+.email-reporte-container .ant-picker {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.email-reporte-container .ant-select-focused .ant-select-selector,
+.email-reporte-container .ant-picker-focused {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Divider elegante */
+.email-reporte-container .ant-divider {
+  border-color: rgba(102, 126, 234, 0.2);
+  margin: 24px 0;
+}
+
+/* Spin loader */
+.email-reporte-container .ant-spin-dot-item {
+  background-color: #667eea;
+}
+
+/* Tabla expandible */
+.email-reporte-container .ant-table-expanded-row > .ant-table-cell {
+  background: linear-gradient(135deg, #667eea05 0%, #764ba205 100%);
+  padding: 24px;
+}
+
+/* Botón de descarga especial */
+.download-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .email-reporte-container {
+    padding: 16px;
+  }
+  
+  .email-reporte-header {
+    padding: 16px;
+  }
+  
+  .email-reporte-container .ant-tabs {
+    padding: 16px;
+  }
+  
+  .email-reporte-container .ant-card-body {
+    padding: 16px;
+  }
+}
+
+/* Animaciones de entrada */
+.email-reporte-container .ant-card,
+.email-reporte-container .ant-table {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Sombras personalizadas para depth */
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}

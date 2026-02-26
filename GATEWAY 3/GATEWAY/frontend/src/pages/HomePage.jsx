@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Typography } from "antd";
+import { Typography, Button, Modal, Space, Tag, Statistic, message, Input } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import * as AntIcons from '@ant-design/icons';
 import menuItems from '../config/menuItems';
@@ -15,6 +15,14 @@ const HomePage = () => {
   const [allowedRoutes, setAllowedRoutes] = useState(null); // Set<string> de rutas permitidas
   const [selectedModule, setSelectedModule] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [estadisticasVisible, setEstadisticasVisible] = useState(false);
+  const [idEncabezadoVisible, setIdEncabezadoVisible] = useState(false);
+  const [idEncabezado, setIdEncabezado] = useState('');
+  const [estadisticas, setEstadisticas] = useState({
+    procesados: 0,
+    pendientes: 0,
+    total: 0
+  });
 
   // Carrusel
   const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
@@ -29,6 +37,82 @@ const HomePage = () => {
   useEffect(() => {
     if (location.pathname === "/home") setSelectedModule(null);
   }, [location.pathname]);
+
+  // Cargar estadísticas de WhatsApp
+  const cargarEstadisticas = async (encabezadoId) => {
+    try {
+      const res = await fetch(`${API_GATEWAY_URL}/api/whatsapp/estadisticas?idEncabezado=${encabezadoId}`);
+      const data = await res.json();
+      
+      console.log("Respuesta del backend:", data); // Para debug
+      
+      // La respuesta viene en data.estadisticas con guiones bajos
+      const stats = data?.estadisticas || {};
+      const total = stats.total || 0;
+      const validados = stats.con_whatsapp || 0;
+      const pendientes = stats.vacios || 0;
+      
+      setEstadisticas({
+        procesados: validados,
+        pendientes: pendientes,
+        total: total
+      });
+      
+      console.log("Estadísticas cargadas:", { total, validados, pendientes }); // Para debug
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+      message.error("Error al cargar estadísticas de WhatsApp");
+    }
+  };
+
+  // Manejar búsqueda por ID de encabezado
+  const handleBuscarEncabezado = () => {
+    if (!idEncabezado || idEncabezado.trim() === '') {
+      message.warning("Por favor ingresa un ID de encabezado");
+      return;
+    }
+    setIdEncabezadoVisible(false);
+    setEstadisticasVisible(true);
+    cargarEstadisticas(idEncabezado);
+  };
+
+  // Exportar a Excel desde el backend
+  const exportarExcel = async () => {
+    try {
+      message.loading({ content: 'Descargando Excel...', key: 'download' });
+      
+      const url = `${API_GATEWAY_URL}/api/whatsapp/descargar-excel?idEncabezado=${idEncabezado}`;
+      
+      // Hacer fetch para obtener el archivo
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Error al descargar el archivo');
+      }
+      
+      // Convertir la respuesta a blob
+      const blob = await response.blob();
+      
+      // Crear URL del blob
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Crear enlace temporal para descargar
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `Numeros_WhatsApp_ID${idEncabezado}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      message.success({ content: `Excel del encabezado ${idEncabezado} descargado correctamente`, key: 'download' });
+    } catch (error) {
+      console.error("Error al exportar:", error);
+      message.error({ content: "No se pudo descargar el Excel", key: 'download' });
+    }
+  };
 
   // Mapeo de íconos
   const iconMapping = {
@@ -269,6 +353,156 @@ const HomePage = () => {
         <div className="cosmic-orb orb-2"></div>
         <div className="cosmic-orb orb-3"></div>
       </div>
+
+      {/* Botón de Estadísticas WhatsApp (visible solo si tiene acceso a RPA WhatsApp) */}
+      {allowedRoutes?.has("/rpawhatsapp") && (
+        <>
+          <Button
+            className="whatsapp-stats-button"
+            icon={<AntIcons.WhatsAppOutlined />}
+            onClick={() => {
+              setIdEncabezado(''); // Limpiar input
+              setIdEncabezadoVisible(true);
+            }}
+          >
+            WhatsApp Estatus
+          </Button>
+
+          {/* Modal para ingresar ID de Encabezado */}
+          <Modal
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <AntIcons.SearchOutlined style={{ fontSize: '24px', color: '#25D366' }} />
+                <h3 style={{ margin: 0 }}>🔍 Buscar Estadísticas WhatsApp</h3>
+              </div>
+            }
+            open={idEncabezadoVisible}
+            onCancel={() => setIdEncabezadoVisible(false)}
+            footer={[
+              <Button key="cancel" onClick={() => setIdEncabezadoVisible(false)}>
+                Cancelar
+              </Button>,
+              <Button 
+                key="search" 
+                type="primary"
+                icon={<AntIcons.SearchOutlined />}
+                onClick={handleBuscarEncabezado}
+                style={{ 
+                  background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                  border: 'none'
+                }}
+              >
+                Buscar
+              </Button>
+            ]}
+          >
+            <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <div>
+                <Typography.Text strong style={{ display: 'block', marginBottom: '8px' }}>
+                  Ingresa el ID del Encabezado:
+                </Typography.Text>
+                <Input
+                  size="large"
+                  placeholder="Ejemplo: 44, 45..."
+                  value={idEncabezado}
+                  onChange={(e) => setIdEncabezado(e.target.value)}
+                  onPressEnter={handleBuscarEncabezado}
+                  prefix={<AntIcons.NumberOutlined style={{ color: '#25D366' }} />}
+                  style={{ borderRadius: '8px' }}
+                />
+              </div>
+              <Typography.Paragraph type="secondary" style={{ textAlign: 'center', margin: 0 }}>
+                💡 Ingresa el ID del encabezado de la carga masiva para ver las estadísticas de validación.
+              </Typography.Paragraph>
+            </Space>
+          </Modal>
+
+          {/* Modal de Estadísticas */}
+          <Modal
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <AntIcons.WhatsAppOutlined style={{ fontSize: '24px', color: '#25D366' }} />
+                <h3 style={{ margin: 0 }}>📊 Estadísticas de Validación WhatsApp (ID: {idEncabezado})</h3>
+              </div>
+            }
+            open={estadisticasVisible}
+            onCancel={() => setEstadisticasVisible(false)}
+            width={700}
+            footer={[
+              <Button key="close" onClick={() => setEstadisticasVisible(false)}>
+                Cerrar
+              </Button>,
+              <Button 
+                key="change" 
+                icon={<AntIcons.SwapOutlined />}
+                onClick={() => {
+                  setEstadisticasVisible(false);
+                  setIdEncabezadoVisible(true);
+                }}
+              >
+                Cambiar Encabezado
+              </Button>,
+              <Button 
+                key="export" 
+                type="primary"
+                icon={<AntIcons.FileExcelOutlined />}
+                onClick={exportarExcel}
+                style={{ 
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none'
+                }}
+              >
+                Descargar Excel Completo
+              </Button>
+            ]}
+          >
+            <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '24px' }}>
+                <Statistic
+                  title="Total de Números"
+                  value={estadisticas.total}
+                  prefix={<AntIcons.PhoneOutlined />}
+                  valueStyle={{ color: '#3b82f6' }}
+                />
+                <Statistic
+                  title="Números Validados"
+                  value={estadisticas.procesados}
+                  prefix={<AntIcons.CheckCircleOutlined />}
+                  valueStyle={{ color: '#10b981' }}
+                />
+                <Statistic
+                  title="Números Pendientes"
+                  value={estadisticas.pendientes}
+                  prefix={<AntIcons.ClockCircleOutlined />}
+                  valueStyle={{ color: '#f59e0b' }}
+                />
+              </div>
+              
+              <div style={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                padding: '20px', 
+                borderRadius: '12px',
+                color: 'white',
+                textAlign: 'center'
+              }}>
+                <h3 style={{ color: 'white', marginBottom: '8px' }}>
+                  Progreso: {estadisticas.total > 0 
+                    ? ((estadisticas.procesados / estadisticas.total) * 100).toFixed(2) 
+                    : 0}%
+                </h3>
+                <p style={{ margin: 0, opacity: 0.9 }}>
+                  🤖 20 máquinas trabajando en {estadisticas.total.toLocaleString('es-ES')} números
+                </p>
+              </div>
+              
+              <Typography.Paragraph type="secondary" style={{ textAlign: 'center', marginTop: '16px' }}>
+                Los datos se actualizan automáticamente cada vez que abres esta ventana.
+                Usa el botón de exportar para descargar el detalle completo en Excel.
+              </Typography.Paragraph>
+            </Space>
+          </Modal>
+        </>
+      )}
 
       {/* Carrusel en esquina */}
       <div className="corner-carousel">

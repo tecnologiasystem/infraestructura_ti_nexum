@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Space, message } from "antd";
 import { FilePdfOutlined, FileWordOutlined, SendOutlined } from "@ant-design/icons";
 import { saveAs } from "file-saver";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_RPA } from "../../../config";
 import { useNavigate } from "react-router-dom";
 
 const ActionButtons = ({ editorContent, excelData, variables, processId, excelFilename }) => {
@@ -22,7 +22,7 @@ const ActionButtons = ({ editorContent, excelData, variables, processId, excelFi
     });
 
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/juridica/generar_documentos?output=${format}&preforma=1`, {
+      const response = await fetch(`${API_URL_GATEWAY_RPA}/gateway/juridica/generar_documentos?output=${format}&preforma=1`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -43,7 +43,7 @@ const ActionButtons = ({ editorContent, excelData, variables, processId, excelFi
       message.success(result.message || "Documentos generados correctamente");
 
       // Descargar ZIP
-      const zipResponse = await fetch(`${API_URL_GATEWAY}/gateway/juridica/exportar_cartas_impulso?processId=${processId}`);
+      const zipResponse = await fetch(`${API_URL_GATEWAY_RPA}/gateway/juridica/exportar_cartas_impulso?processId=${processId}`);
       if (!zipResponse.ok) throw new Error("No se pudo descargar el ZIP");
 
       const zipBlob = await zipResponse.blob();

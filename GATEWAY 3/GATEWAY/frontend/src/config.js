@@ -1,4 +1,7 @@
 export const API_URL_GATEWAY = "http://172.18.73.22:3001";
+export const API_URL_GATEWAY_CONNECT = "http://172.18.73.22:3002";
+export const API_URL_GATEWAY_RPA = "http://172.18.73.22:3003";
+export const API_URL_GATEWAY_TOKI = "http://172.18.73.22:3004";
 export const API_URL_LOGIN = "http://172.18.72.111:3000";
 export const LULA_API_KEY = "api-019635c2310270bf8696ca8da0fc5c73-aaIlCeOBlk-LKeCeKqlFWPpvGn9PGOP4YrnY6VR4rao";
 export const LULA_API_KEY_DOMINICANA = "api-01977eed50357f27a5df947a28e6f591-oNiZWTqReQ17Wf9fHeF9WG1C4fcGqNMCDxWrBYEq-Hk";

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table } from "antd";
 import axios from "axios";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 
 
 // Colores según valor
@@ -92,7 +92,7 @@ const Mapa = () => {
   const [datos, setDatos] = useState([]);
 
   useEffect(() => {
-    axios.get(`${API_URL_GATEWAY}/gateway/embudo/efectividad-por-hora`)
+    axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/embudo/efectividad-por-hora`)
       .then((res) => setDatos(res.data))
       .catch((err) => console.error("Error cargando datos:", err));
   }, []);

@@ -12,7 +12,7 @@ import {
   Pagination,
   Select,
 } from "antd";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
@@ -98,7 +98,7 @@ export default function ReportesWhatsApp() {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${API_URL_GATEWAY}/gateway-rpa/ClientesEnvioWhatsApp`
+        `${API_URL_GATEWAY_RPA}/gateway-rpa/ClientesEnvioWhatsApp`
       );
       setRows(Array.isArray(data) ? data : []);
       setPage(1);

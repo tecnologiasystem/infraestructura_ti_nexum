@@ -11,7 +11,7 @@ import {
   LabelList,
 } from "recharts";
 import axios from "axios";
-import { API_URL_GATEWAY } from "./../../config";
+import { API_URL_GATEWAY_CONNECT } from "./../../config";
 import { DownloadOutlined, SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -41,9 +41,9 @@ const TableroControl = () => {
       try {
         setLoading(true);
         const [campanasRes, rolesRes, loginsRes] = await Promise.all([
-          axios.get(`${API_URL_GATEWAY}/gateway/graficos/usuarios_por_campana`),
-          axios.get(`${API_URL_GATEWAY}/gateway/graficos/usuarios_por_rol`),
-          axios.get(`${API_URL_GATEWAY}/gateway/graficos/logs_por_dia`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/graficos/usuarios_por_campana`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/graficos/usuarios_por_rol`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/graficos/logs_por_dia`),
         ]);
 
         const campanaData = campanasRes.data?.labels.map((label, i) => ({
@@ -74,7 +74,7 @@ const TableroControl = () => {
 
     const fetchLogs = async () => {
       try {
-        const res = await axios.get(`${API_URL_GATEWAY}/gateway/logs/iniciosesion`);
+        const res = await axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/logs/iniciosesion`);
         setLogs(res.data);
       } catch (error) {
         console.error("Error al obtener logs:", error);
@@ -91,7 +91,7 @@ const TableroControl = () => {
     const desde = dayjs(rangoFechas[0]).startOf("day").format("YYYY-MM-DD HH:mm:ss");
     const hasta = dayjs(rangoFechas[1]).endOf("day").format("YYYY-MM-DD HH:mm:ss");
 
-    const url = `${API_URL_GATEWAY}/gateway/logs/iniciosesion/exportar?usuario=${encodeURIComponent(filtroUsuario)}&desde=${desde}&hasta=${hasta}`;
+    const url = `${API_URL_GATEWAY_CONNECT}/gateway/logs/iniciosesion/exportar?usuario=${encodeURIComponent(filtroUsuario)}&desde=${desde}&hasta=${hasta}`;
     window.open(url, "_blank");
   };
 
@@ -152,7 +152,7 @@ const TableroControl = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+      <Row justify="space-between" align="middle" style={{ marginTop: 60 }}>
         <Col>
         <h1 className="areas-title">Tablero de Control</h1>
         </Col>

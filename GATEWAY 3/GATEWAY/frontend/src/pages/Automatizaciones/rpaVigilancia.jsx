@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaVigilancia.css";
 
 const RpaVigilancia = () => {
@@ -41,7 +41,7 @@ const RpaVigilancia = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/vigilancia_api/detalle/listar_agrupadoVigilancia`
+        `${API_URL_GATEWAY_RPA}/gateway/vigilancia_api/detalle/listar_agrupadoVigilancia`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -55,13 +55,13 @@ const RpaVigilancia = () => {
   const fetchResumen = async (idEncabezado) => {
     try {
       const r = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizacionesVigilancia/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizacionesVigilancia/${idEncabezado}/resumen`
       );
       if (r.ok) return await r.json();
     } catch (_) {}
 
     const detalleRes = await fetch(
-      `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleVigilancia?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleVigilancia?id_encabezado=${idEncabezado}`
     );
     const detalleData = await detalleRes.json();
     const base = (detalleData?.detalles || [])
@@ -92,7 +92,7 @@ const RpaVigilancia = () => {
       const offset = (page - 1) * pageSize;
 
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesVigilancia?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesVigilancia?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -136,7 +136,7 @@ const RpaVigilancia = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionVigilancia`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionVigilancia`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -172,7 +172,7 @@ const RpaVigilancia = () => {
     setDetailsLoading(true);
     try {
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizacionesVigilancia/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizacionesVigilancia/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -196,7 +196,7 @@ const RpaVigilancia = () => {
       }
 
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleVigilancia?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleVigilancia?id_encabezado=${idEncabezado}`
       );
       const full = await res.json();
       const base = (full?.detalles || [])
@@ -248,7 +248,7 @@ const RpaVigilancia = () => {
 
   // ===== pausar / reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/vigilancia_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/vigilancia_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -257,7 +257,7 @@ const RpaVigilancia = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/vigilancia_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/vigilancia_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -290,7 +290,7 @@ const RpaVigilancia = () => {
               className="rpa-btn-primary"
               onClick={() =>
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/plantillaVigilancia`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/plantillaVigilancia`
                 )
               }
             >
@@ -307,7 +307,7 @@ const RpaVigilancia = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarVigilancia`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarVigilancia`,
                     {
                       method: "POST",
                       body: formData,
@@ -516,7 +516,7 @@ const RpaVigilancia = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosVigilancia?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosVigilancia?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

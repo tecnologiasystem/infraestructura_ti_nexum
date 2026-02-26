@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Space, Input, Modal, Tooltip, notification } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../config";
 import "./Campanas.css";
 
 const Campanas = () => {
@@ -16,7 +16,7 @@ const Campanas = () => {
 
 const fetchCampanas = async () => {
   try {
-    const response = await fetch(`${API_URL_GATEWAY}/gateway/campanas/dar`);
+    const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/campanas/dar`);
     const all = await response.json();
     const activas = (Array.isArray(all) ? all : []).filter(c => Number(c.estado) === 1);
     setData(activas);
@@ -40,7 +40,7 @@ const fetchCampanas = async () => {
 
   const handleDelete = async (idCampana) => {
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/campanas/eliminar`, {
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/campanas/eliminar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idCampana }),
@@ -71,8 +71,8 @@ const fetchCampanas = async () => {
       };
 
       const url = selectedCampaignId
-        ? `${API_URL_GATEWAY}/gateway/campanas/editar`
-        : `${API_URL_GATEWAY}/gateway/campanas/crear`;
+        ? `${API_URL_GATEWAY_CONNECT}/gateway/campanas/editar`
+        : `${API_URL_GATEWAY_CONNECT}/gateway/campanas/crear`;
 
       const method = selectedCampaignId ? "PUT" : "POST";
 

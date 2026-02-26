@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaRunt.css";
 
 const RpaRunt = () => {
@@ -41,7 +41,7 @@ const RpaRunt = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/runt_api/detalle/listar_agrupadoRunt`
+        `${API_URL_GATEWAY_RPA}/gateway/runt_api/detalle/listar_agrupadoRunt`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -56,13 +56,13 @@ const RpaRunt = () => {
     // 1) intenta endpoint de resumen “nuevo”
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizacionesRunt/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizacionesRunt/${idEncabezado}/resumen`
       );
       if (res.ok) return await res.json(); // { procesados, totalRegistros }
     } catch (_) {}
     // 2) fallback: cuenta desde el detalle completo actual
     const detalleRes = await fetch(
-      `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleRunt?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleRunt?id_encabezado=${idEncabezado}`
     );
     const detalleData = await detalleRes.json();
     const procesados = (detalleData?.detalles || []).filter(
@@ -88,7 +88,7 @@ const RpaRunt = () => {
 
       // 1) intenta endpoint paginado (retrocompat si aún devuelve array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesRunt?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesRunt?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -133,7 +133,7 @@ const RpaRunt = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionRunt`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionRunt`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -170,7 +170,7 @@ const RpaRunt = () => {
     try {
       // 1) intenta endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizacionesRunt/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizacionesRunt/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -194,7 +194,7 @@ const RpaRunt = () => {
 
       // 2) fallback: endpoint actual (todo) + filtrar/paginar en front
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleRunt?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleRunt?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // { detalles: [...] }
       const base = (full?.detalles || [])
@@ -244,7 +244,7 @@ const RpaRunt = () => {
 
   // ===== pausar / reanudar =====
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/runt_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/runt_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -253,7 +253,7 @@ const RpaRunt = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/runt_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/runt_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -285,7 +285,7 @@ const RpaRunt = () => {
             <Button
               className="rpa-btn-primary"
               onClick={() =>
-                window.open(`${API_URL_GATEWAY}/gateway/excel/plantillaRunt`)
+                window.open(`${API_URL_GATEWAY_RPA}/gateway/excel/plantillaRunt`)
               }
             >
               Descargar plantilla
@@ -302,7 +302,7 @@ const RpaRunt = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarRunt`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarRunt`,
                     {
                       method: "POST",
                       body: formData,
@@ -514,7 +514,7 @@ const RpaRunt = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosRunt?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosRunt?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

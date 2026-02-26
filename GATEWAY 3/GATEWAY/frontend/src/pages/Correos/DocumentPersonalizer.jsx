@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Card, Button, Space, Tag, message, Typography, Divider, Select, Input, Tooltip } from "antd";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { useSearchParams } from "react-router-dom";
@@ -46,7 +46,7 @@ export default function DocumentPersonalizer() {
     (async () => {
       try {
         // endpoint opcional: si no lo tienes, puedes omitir y pedir al BE que te devuelva headers
-        const res = await axios.get(`${API_URL_GATEWAY}/gateway/correos/email/download_excel`, {
+        const res = await axios.get(`${API_URL_GATEWAY_RPA}/gateway/correos/email/download_excel`, {
           params: { file: excelServerName },
           responseType: "arraybuffer"
         });
@@ -90,7 +90,7 @@ export default function DocumentPersonalizer() {
         output: "pdf"
       };
       const { data } = await axios.post(
-        `${API_URL_GATEWAY}/gateway/docs/generar`,
+        `${API_URL_GATEWAY_RPA}/gateway/docs/generar`,
         payload,
         { responseType: "blob" } // recibimos ZIP
       );

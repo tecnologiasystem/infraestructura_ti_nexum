@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Upload, Button, Table, message, Card } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../config";
 
 const SubirExcelPrediccion = () => {
   const [file, setFile] = useState(null);
@@ -19,7 +19,7 @@ const SubirExcelPrediccion = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/IA/subir_y_predecir`, {
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/IA/subir_y_predecir`, {
         method: "POST",
         body: formData,
       });
@@ -40,7 +40,7 @@ const SubirExcelPrediccion = () => {
   const cargarPredicciones = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/IA/predicciones`);
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/IA/predicciones`);
       if (!response.ok) throw new Error("Error al obtener predicciones");
       const data = await response.json();
       setRawData(data);

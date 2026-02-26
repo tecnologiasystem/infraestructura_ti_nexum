@@ -20,7 +20,7 @@ import {
   LabelList,
 } from "recharts";
 import axios from "axios";
-import { API_URL_GATEWAY } from "./../../config";
+import { API_URL_GATEWAY_CONNECT } from "./../../config";
 import menuItems from "../../config/menuItems";
 import * as AntIcons from "@ant-design/icons";
 
@@ -61,13 +61,13 @@ const UsuariosGrafico = () => {
           graficoCampanasRes,
           graficoRolesRes
         ] = await Promise.all([
-          axios.get(`${API_URL_GATEWAY}/gateway/usuarios/dar`),
-          axios.get(`${API_URL_GATEWAY}/gateway/areas/dar`),
-          axios.get(`${API_URL_GATEWAY}/gateway/roles/dar`),
-          axios.get(`${API_URL_GATEWAY}/gateway/campanas/dar`),
-          axios.get(`${API_URL_GATEWAY}/gateway/usuariosCampanas/dar`),
-          axios.get(`${API_URL_GATEWAY}/gateway/graficos/usuarios_por_campana`),
-          axios.get(`${API_URL_GATEWAY}/gateway/graficos/usuarios_por_rol`)
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/usuarios/dar`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/areas/dar`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/roles/dar`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/campanas/dar`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/usuariosCampanas/dar`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/graficos/usuarios_por_campana`),
+          axios.get(`${API_URL_GATEWAY_CONNECT}/gateway/graficos/usuarios_por_rol`)
         ]);
 
         setUsuarios(usuariosRes.data || []);

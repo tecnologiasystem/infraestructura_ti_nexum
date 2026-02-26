@@ -38,10 +38,14 @@ import RpaTyba from '../pages/Automatizaciones/rpaTyba';
 import RpaVigencia from '../pages/Automatizaciones/rpaVigencia';
 import RpaMensajesWhatsApp from '../pages/Automatizaciones/rpaMensajesWhatsApp';
 import MensajesWhatsapp from '../pages/WhatsApp/mensajesWhatsApp';
-import AcuerdoPago from '../pages/AcuerdosPago/AcuerdoPago';
+import GestionTeseo from '../pages/Teseo/GestionTeseo';
 import DocumentPersonalizer from '../pages/Correos/DocumentPersonalizer';
 import ReportesWhatsApp from '../pages/WhatsApp/reportesWhatsapp';
 import EmailReporte from '../pages/Correos/EmailReporte';
+import Reportes from '../pages/Tableros/Reportes';
+import CrmConversaciones from '../pages/CRM/CrmConversaciones';
+import ImagenClick from '../pages/Correos/ImagenClick';
+import EmailReporteImagen from '../pages/Correos/EmailReporteImagenes';
 
 const RutaProtegida = ({ children, ruta }) => {
   const permisos = JSON.parse(localStorage.getItem("permisos") || "[]");
@@ -56,9 +60,17 @@ const AppRouter = () => {
       
       <Route path="/EmailMasivo" element={<EmailMasivo />} /> 
 
-      <Route path="/acuerdoPago" element={<AcuerdoPago />} />
+      <Route path="/gestionesTeseo" element={<GestionTeseo />} />
 
       <Route path="/email-reporte" element={<EmailReporte />} />
+      <Route path="/email-reporte-imagenes" element={<EmailReporteImagen />} />
+
+      <Route path="/Reportes" element={<Reportes />} />
+
+      <Route path="/CRM" element={<CrmConversaciones />} />
+      <Route path="/ImagenClick" element={<ImagenClick />} />
+
+      <Route path="/tableroEmbudo" element={<TableroEmbudo />} />
 
       <Route path="/documentos" element={<DocumentPersonalizer />} />
             <Route path="/reportesWhatsapp" element={<ReportesWhatsApp />} />
@@ -219,11 +231,7 @@ const AppRouter = () => {
           <ImportarLlamadas />
         </RutaProtegida>
       } />
-      <Route path="/tableroEmbudo" element={
-        <RutaProtegida ruta="/tableroEmbudo">
-          <TableroEmbudo />
-        </RutaProtegida>
-      } />
+      
       <Route path="/projectManager" element={
         <RutaProtegida ruta="/projectManager">
           <ProjectManager />

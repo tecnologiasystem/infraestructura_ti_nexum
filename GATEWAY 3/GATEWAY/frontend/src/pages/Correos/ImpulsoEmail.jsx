@@ -16,6 +16,7 @@ import {
   Tooltip,
   Progress,
   Alert,
+  Pagination,
 } from "antd";
 import {
   UploadOutlined,
@@ -32,7 +33,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import * as XLSX from "xlsx";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./impulsoEmail.css";
 import { useNavigate } from "react-router-dom";
 
@@ -68,6 +69,7 @@ export default function EmailMasivo() {
     "cedula",
     "nombre",
     "correo",
+    "campana",
   ]);
   const [uploadedExcelName, setUploadedExcelName] = useState("");
   const [localAttachments, setLocalAttachments] = useState([]);
@@ -79,9 +81,17 @@ export default function EmailMasivo() {
   const [perDocPattern, setPerDocPattern] = useState("documento_{Var1}.pdf");
   const [perDocFolder, setPerDocFolder] = useState("");
   const [localAttachmentsUI, setLocalAttachmentsUI] = useState([]);
+  const myId = Number(localStorage.getItem("idUsuario") || 0);
+
+  const [sampleVars, setSampleVars] = useState(null);
 
   const [senderEmail, setSenderEmail] = useState("");
-const [senderOptions, setSenderOptions] = useState([]);
+  const [senderOptions, setSenderOptions] = useState([]);
+
+  const [excelRows, setExcelRows] = useState([]);
+  const [previewPage, setPreviewPage] = useState(1);
+  const [previewPageSize, setPreviewPageSize] = useState(5);
+  const [perDocMode, setPerDocMode] = useState("pdf");
 
   const navigate = useNavigate();
 
@@ -101,34 +111,46 @@ const [senderOptions, setSenderOptions] = useState([]);
   }, []);
 
   useEffect(() => {
-  (async () => {
-    try {
-      const { data } = await axios.get(`${API_URL_GATEWAY}/gateway/correos/senders`);
-      const emails = data?.emails || [];
-      setSenderOptions(emails.map(e => ({ label: e, value: e })));
-      if (emails.length && !senderEmail) setSenderEmail(emails[0]);
-    } catch (e) {
-      console.warn("No se pudo cargar correos remitentes", e);
-    }
-  })();
-}, []);
+    (async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_URL_GATEWAY_RPA}/gateway/correos/senders`
+        );
+        const emails = data?.emails || [];
+        setSenderOptions(emails.map((e) => ({ label: e, value: e })));
+        if (emails.length && !senderEmail) setSenderEmail(emails[0]);
+      } catch (e) {
+        console.warn("No se pudo cargar correos remitentes", e);
+      }
+    })();
+  }, []);
 
   const previewHtml = useMemo(() => {
+    const resolvedSubject = sampleVars
+      ? resolveVariables(emailContent.subject, sampleVars)
+      : emailContent.subject;
+
+    const resolvedBody = sampleVars
+      ? resolveVariables(emailContent.body, sampleVars)
+      : emailContent.body;
+
     return `
-      <div class="email-preview">
-        <div class="email-header">
-          <h3 class="email-subject">${
-            highlightVariables(emailContent.subject) ||
-            '<span class="placeholder">Asunto del correo</span>'
-          }</h3>
-        </div>
-        <div class="email-body">${
-          highlightVariables(emailContent.body) ||
-          '<span class="placeholder">Cuerpo del correo...</span>'
-        }</div>
+    <div class="email-preview">
+      <div class="email-header">
+        <h3 class="email-subject">${
+          resolvedSubject
+            ? resolvedSubject
+            : '<span class="placeholder">Asunto del correo</span>'
+        }</h3>
       </div>
-    `;
-  }, [emailContent]);
+      <div class="email-body">${
+        resolvedBody
+          ? resolvedBody.replace(/\n/g, "<br/>")
+          : '<span class="placeholder">Cuerpo del correo...</span>'
+      }</div>
+    </div>
+  `;
+  }, [emailContent, sampleVars]);
 
   const handleChange = (section, value) => {
     setEmailContent((prev) => ({ ...prev, [section]: value }));
@@ -141,10 +163,42 @@ const [senderOptions, setSenderOptions] = useState([]);
     }));
   };
 
+  function resolveVariables(text, vars = {}) {
+    if (!text) return "";
+    return text.replace(/\{([^}]+)\}/g, (m, key) => {
+      const k = String(key || "").trim();
+      // busca por exacto y por minúscula (por si el Excel trae "Var1" y tú escribes "var1")
+      const v =
+        vars[k] ?? vars[k.toLowerCase()] ?? vars[k.toUpperCase()] ?? null;
+      return v == null || v === "" ? m : String(v);
+    });
+  }
+  function buildPreviewHtml(vars) {
+    const resolvedSubject = resolveVariables(emailContent.subject, vars);
+    const resolvedBody = resolveVariables(emailContent.body, vars);
+
+    return `
+    <div class="email-preview">
+      <div class="email-header">
+        <h3 class="email-subject">${
+          resolvedSubject
+            ? resolvedSubject
+            : '<span class="placeholder">Asunto del correo</span>'
+        }</h3>
+      </div>
+      <div class="email-body">${
+        resolvedBody
+          ? resolvedBody.replace(/\n/g, "<br/>")
+          : '<span class="placeholder">Cuerpo del correo...</span>'
+      }</div>
+    </div>
+  `;
+  }
+
   function downloadTemplate() {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ["CORREO", "Var1", "Var2", "Var3", "Var4", "Var5"],
+      ["CORREO","CEDULA", "NOMBRE", "CAMPAÑA", "Var1", "Var2", "Var3", "Var4", "Var5"],
     ]);
 
     ws["!cols"] = [
@@ -154,9 +208,11 @@ const [senderOptions, setSenderOptions] = useState([]);
       { wch: 15 },
       { wch: 10 },
       { wch: 15 },
+      { wch: 20 },
+      { wch: 15 }
     ];
 
-    ws["!ref"] = "A1:F2";
+    ws["!ref"] = "A1:I2";
     XLSX.utils.book_append_sheet(wb, ws, "Correos");
     XLSX.writeFile(wb, "plantilla_correos.xlsx");
   }
@@ -173,6 +229,37 @@ const [senderOptions, setSenderOptions] = useState([]);
       const wb = XLSX.read(buf, { type: "array" });
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const headers = getHeadersFromSheet(sheet);
+      const rows = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        raw: false,
+        defval: "",
+      });
+      const headerRow = rows?.[0] || [];
+      const dataRows = rows?.slice(1) || [];
+
+      const normalizedHeaders = headerRow.map((h) => String(h || "").trim());
+
+      // Convierte cada fila a objeto {Header: value}
+      const all = dataRows
+        .filter((r) => r && r.some((cell) => String(cell ?? "").trim() !== "")) // opcional: ignora filas vacías
+        .map((r) => {
+          const obj = {};
+          normalizedHeaders.forEach((h, idx) => {
+            obj[h] = r?.[idx] ?? "";
+            obj[h.toLowerCase()] = r?.[idx] ?? ""; // lookup flexible
+            obj[h.toUpperCase()] = r?.[idx] ?? "";
+          });
+          return obj;
+        });
+
+      setExcelRows(all);
+
+      // Mantén tu sampleVars como la primera fila (para preview “rápido” si quieres)
+      setSampleVars(all?.[0] || null);
+
+      // Y tus variables disponibles:
+      setAvailableVars(headers);
+
       setUploadProgress(60);
 
       if (!headers.length) {
@@ -188,7 +275,7 @@ const [senderOptions, setSenderOptions] = useState([]);
       fd.append("file", file);
 
       const { data } = await axios.post(
-        `${API_URL_GATEWAY}/gateway/correos/email/upload_excel`,
+        `${API_URL_GATEWAY_RPA}/gateway/correos/email/upload_excel`,
         fd,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -222,7 +309,7 @@ const [senderOptions, setSenderOptions] = useState([]);
       localAttachments.forEach((f) => fd.append("files", f));
 
       const { data } = await axios.post(
-        `${API_URL_GATEWAY}/gateway/correos/adjuntos/subir`,
+        `${API_URL_GATEWAY_RPA}/gateway/correos/adjuntos/subir`,
         fd,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -259,10 +346,11 @@ const [senderOptions, setSenderOptions] = useState([]);
         perDocPattern,
         perDocFolder,
         senderEmail,
+        idUsuario: myId,
       };
 
       const { data } = await axios.post(
-        `${API_URL_GATEWAY}/gateway/correos/Email`,
+        `${API_URL_GATEWAY_RPA}/gateway/correos/Email`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -307,13 +395,12 @@ const [senderOptions, setSenderOptions] = useState([]);
               Envía correos personalizados a múltiples destinatarios
             </Text>
             <Button
-  type="default"
-  style={{ marginTop: "16px" }}
-  onClick={() => navigate("/email-reporte")}
->
-  Ver Reporte de Envíos
-</Button>
-
+              type="default"
+              style={{ marginTop: "16px" }}
+              onClick={() => navigate("/email-reporte")}
+            >
+              Ver Reporte de Envíos
+            </Button>
           </div>
         </div>
       </div>
@@ -332,13 +419,12 @@ const [senderOptions, setSenderOptions] = useState([]);
               </div>
 
               <label>CORREO A USAR: </label>
-<Select
-  placeholder="Selecciona el correo remitente"
-  options={senderOptions}
-  value={senderEmail || undefined}
-  onChange={(val) => setSenderEmail(val)}
-/>
-
+              <Select
+                placeholder="Selecciona el correo remitente"
+                options={senderOptions}
+                value={senderEmail || undefined}
+                onChange={(val) => setSenderEmail(val)}
+              />
 
               <Alert
                 message="Carga un archivo Excel con los datos de tus destinatarios"
@@ -493,12 +579,26 @@ const [senderOptions, setSenderOptions] = useState([]);
                 multiple
                 beforeUpload={() => false}
                 fileList={localAttachmentsUI}
-                onChange={({ file, fileList }) => {
-                  setLocalAttachmentsUI(fileList);
-                  const files = fileList
-                    .map((f) => f.originFileObj)
-                    .filter(Boolean);
-                  setLocalAttachments(files);
+                onChange={({ fileList }) => {
+                  setLocalAttachmentsUI((prev) => {
+                    const merged = [...prev, ...fileList];
+                    // eliminar duplicados por uid
+                    const unique = Array.from(
+                      new Map(merged.map((f) => [f.uid, f])).values()
+                    );
+                    return unique;
+                  });
+
+                  setLocalAttachments((prev) => {
+                    const incoming = fileList
+                      .map((f) => f.originFileObj)
+                      .filter(Boolean);
+
+                    const merged = [...prev, ...incoming];
+                    return Array.from(
+                      new Map(merged.map((f) => [f.name + f.size, f])).values()
+                    );
+                  });
                 }}
                 className="upload-area"
               >
@@ -536,32 +636,23 @@ const [senderOptions, setSenderOptions] = useState([]);
               )}
 
               {serverAttachments.length > 0 && (
-  <div className="uploaded-files">
-    <Text strong>Archivos subidos:</Text>
-    <div className="file-tags">
-      {serverAttachments.map((p, i) => (
-        <Space key={i} style={{ marginBottom: 8 }}>
-          <Tag icon={<PaperClipOutlined />} color={isImage(p) ? "green" : "blue"}>
-            {p}
-          </Tag>
-          {isImage(p) && (
-            <Button
-              size="small"
-              onClick={() =>
-                setEmailContent(prev => ({
-                  ...prev,
-                  body: `${prev.body || ""}\n<img src="${p}" style="max-width:100%;height:auto;" />`
-                }))
-              }
-            >
-              Insertar en cuerpo
-            </Button>
-          )}
-        </Space>
-      ))}
-    </div>
-  </div>
-)}
+                <div className="uploaded-files">
+                  <Text strong>Archivos subidos:</Text>
+                  <div className="file-tags">
+                    {serverAttachments.map((p, i) => (
+                      <Space key={i} style={{ marginBottom: 8 }}>
+                        <Tag
+                          icon={<PaperClipOutlined />}
+                          color={isImage(p) ? "green" : "blue"}
+                        >
+                          {p}
+                        </Tag>
+                        
+                      </Space>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
             <Card className="step-card" size="small" style={{ marginTop: 12 }}>
               <div className="step-header">
@@ -572,9 +663,33 @@ const [senderOptions, setSenderOptions] = useState([]);
               </div>
 
               <Space direction="vertical" style={{ width: "100%" }}>
+                {/* selector de modo */}
+                <Space wrap>
+                  <Text type="secondary">Usar patrón como:</Text>
+                  <Select
+                    value={perDocMode}
+                    onChange={setPerDocMode}
+                    style={{ width: 260 }}
+                    options={[
+                      {
+                        value: "pdf",
+                        label: "Adjunto por persona (PDF/archivo)",
+                      },
+                      {
+                        value: "img",
+                        label: "Imagen por persona (en el cuerpo)",
+                      },
+                    ]}
+                  />
+                </Space>
+
                 <Space.Compact style={{ width: "100%" }}>
                   <Input
-                    addonBefore="Nombre del archivo"
+                    addonBefore={
+                      perDocMode === "img"
+                        ? "Nombre imagen"
+                        : "Nombre del archivo"
+                    }
                     value={perDocPattern}
                     onChange={(e) => setPerDocPattern(e.target.value)}
                   />
@@ -593,10 +708,35 @@ const [senderOptions, setSenderOptions] = useState([]);
                 </Space.Compact>
 
                 <Typography.Text type="secondary">
-                  Escribe o construye el nombre del archivo con el selector.
-                  Ejemplo: <code>documento_{"{Var1}"}.pdf</code>. Se buscará el
-                  PDF por cada fila usando el valor de la variable seleccionada.
+                  Ejemplos:&nbsp;
+                  {perDocMode === "img" ? (
+                    <>
+                      <code>foto_{"{Var1}"}.png</code>
+                    </>
+                  ) : (
+                    <>
+                      <code>documento_{"{Var1}"}.pdf</code> (se buscará el PDF
+                      por fila y se adjuntará)
+                    </>
+                  )}
                 </Typography.Text>
+
+                {/* Botón SOLO si estás en modo imagen */}
+                {perDocMode === "img" && (
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      setEmailContent((prev) => ({
+                        ...prev,
+                        body: `${
+                          prev.body || ""
+                        }\n<img src="${perDocPattern}" style="max-width:100%;height:auto;" />`,
+                      }))
+                    }
+                  >
+                    Adjuntar al cuerpo (por persona)
+                  </Button>
+                )}
               </Space>
             </Card>
 
@@ -644,10 +784,97 @@ const [senderOptions, setSenderOptions] = useState([]);
                 />
               }
             >
-              <div
-                className="email-preview-container"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-              />
+              {excelRows?.length ? (
+                <>
+                  {/* Paginación simple */}
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text type="secondary">Registros: {excelRows.length}</Text>
+
+                    <Select
+                      value={previewPageSize}
+                      onChange={(v) => {
+                        setPreviewPageSize(v);
+                        setPreviewPage(1);
+                      }}
+                      style={{ width: 120 }}
+                      options={[
+                        { value: 3, label: "3" },
+                        { value: 5, label: "5" },
+                        { value: 10, label: "10" },
+                      ]}
+                    />
+                  </div>
+
+                  {excelRows
+                    .slice(
+                      (previewPage - 1) * previewPageSize,
+                      previewPage * previewPageSize
+                    )
+                    .map((row, idx) => {
+                      const correo =
+                        row.CORREO ||
+                        row.correo ||
+                        row.Email ||
+                        row.email ||
+                        "";
+                      return (
+                        <Card
+                          key={`${previewPage}-${idx}`}
+                          size="small"
+                          style={{ marginBottom: 12 }}
+                          title={
+                            <Space>
+                              <Tag color="blue">
+                                #{(previewPage - 1) * previewPageSize + idx + 1}
+                              </Tag>
+                              {correo ? (
+                                <Text>{correo}</Text>
+                              ) : (
+                                <Text type="secondary">(sin CORREO)</Text>
+                              )}
+                            </Space>
+                          }
+                        >
+                          <div
+                            className="email-preview-container"
+                            dangerouslySetInnerHTML={{
+                              __html: buildPreviewHtml(row),
+                            }}
+                          />
+                        </Card>
+                      );
+                    })}
+
+                  {/* Paginación */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Pagination
+                      current={previewPage}
+                      pageSize={previewPageSize}
+                      total={excelRows.length}
+                      onChange={(p) => setPreviewPage(p)}
+                      showSizeChanger={false}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div
+                  className="email-preview-container"
+                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                />
+              )}
 
               {availableVars.length > 0 && (
                 <div className="variables-info">

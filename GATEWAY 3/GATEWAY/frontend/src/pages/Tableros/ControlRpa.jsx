@@ -14,7 +14,7 @@ import {
 } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../config";
 import {
   BarChart,
   Bar,
@@ -97,7 +97,7 @@ const openGrafica = (item) => {
   try {
     setVigenciaLoading(true);
     const { data } = await axios.get(
-      `${API_URL_GATEWAY}/rpa/encabezados/${currentOrigen}/${idEncabezado}/resumen`
+      `${API_URL_GATEWAY_CONNECT}/rpa/encabezados/${currentOrigen}/${idEncabezado}/resumen`
     );
     setVigenciaResumen(prev => ({
       ...prev,
@@ -256,7 +256,7 @@ const getPieChartData = (item) => {
   const descargarExcelTodoOrigen = async (origen) => {
     setLoadingExcel(true);
     try {
-      const url = `${API_URL_GATEWAY}/gateway/rpa/${origen}/detalles/descargar_todos`;
+      const url = `${API_URL_GATEWAY_CONNECT}/gateway/rpa/${origen}/detalles/descargar_todos`;
       const response = await axios.get(url, { responseType: "blob" });
 
       const blob = new Blob([response.data], {
@@ -279,7 +279,7 @@ const getPieChartData = (item) => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${API_URL_GATEWAY}/gateway/rpa/encabezados`,
+        `${API_URL_GATEWAY_CONNECT}/gateway/rpa/encabezados`,
         { params: { origen } }
       );
       setEncabezados((prev) => ({ ...prev, [origen]: data }));
@@ -294,7 +294,7 @@ const getPieChartData = (item) => {
     setLoadingDashboard(true);
     try {
       const { data } = await axios.get(
-        `${API_URL_GATEWAY}/gateway/rpa/dashboard`
+        `${API_URL_GATEWAY_CONNECT}/gateway/rpa/dashboard`
       );
       setDashboard(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -333,7 +333,7 @@ const getPieChartData = (item) => {
   const fetchTokensRunt = async () => {
     try {
       const { data } = await axios.get(
-        `${API_URL_GATEWAY}/parametro/tokens-usados`
+        `${API_URL_GATEWAY_CONNECT}/parametro/tokens-usados`
       );
       console.log("Respuesta tokens:", data);
 
@@ -427,14 +427,14 @@ const getPieChartData = (item) => {
       let data;
       if (cc && cc.length >= 4) {
         const { data: result } = await axios.get(
-          `${API_URL_GATEWAY}/gateway/rpa/encabezados/${origen}/${idEnc}/detalles/buscar_por_cedula`,
+          `${API_URL_GATEWAY_CONNECT}/gateway/rpa/encabezados/${origen}/${idEnc}/detalles/buscar_por_cedula`,
           { params: { cedula: cc } }
         );
         data = result;
       } else {
         const offset = (page - 1) * modal.pageSize;
         const response = await axios.get(
-          `${API_URL_GATEWAY}/gateway/rpa/encabezados/${origen}/${idEnc}/detalles`,
+          `${API_URL_GATEWAY_CONNECT}/gateway/rpa/encabezados/${origen}/${idEnc}/detalles`,
           { params: { offset, limit: modal.pageSize, cc } }
         );
         data = response.data;

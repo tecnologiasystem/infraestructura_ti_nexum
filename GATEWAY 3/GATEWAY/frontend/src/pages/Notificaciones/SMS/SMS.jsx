@@ -5,7 +5,7 @@ import { Card, Tabs, Input, Button, Upload, Modal, Table, Row, Col, message as a
 import { UploadOutlined, DownloadOutlined, SendOutlined, EyeOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { API_URL_GATEWAY } from "../../../config"; // Asegúrate que tu config apunte al /gateway
+import { API_URL_GATEWAY_CONNECT } from "../../../config"; // Asegúrate que tu config apunte al /gateway
 import "./SMS.css";
 
 const { TabPane } = Tabs;
@@ -51,7 +51,7 @@ const SMS = () => {
     }
     try {
       const payload = { telefono: indicador + numero, mensaje: mensaje };
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/sms/enviar_individual`, {
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/sms/enviar_individual`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -78,7 +78,7 @@ const SMS = () => {
     const formData = new FormData();
     formData.append("archivo", fileList[0]);
     try {
-      const response = await fetch(`${API_URL_GATEWAY}/sms/enviar_masivo`, {
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/sms/enviar_masivo`, {
         method: "POST",
         body: formData
       });

@@ -26,7 +26,7 @@ import {
   InfoCircleOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../../config";
 import "./CampanasGail.css";
 import {
   LULA_API_KEY_DOMINICANA,
@@ -226,7 +226,7 @@ const CampanasGail = () => {
   useEffect(() => {
     const cargarCampanas = async () => {
       try {
-        const res = await fetch("https://api.lula.com/v1/campaigns", {
+const res = await fetch(buildLulaUrl(paisSeleccionado, '/campaigns'), {
           headers: {
             "X-API-Key": apiKeyActiva,
             accept: "application/json",
@@ -242,73 +242,52 @@ const CampanasGail = () => {
     if (apiKeyActiva) cargarCampanas();
   }, [apiKeyActiva]);
 
-  useEffect(() => {
-    if (!modalCountry || !modalApiKey) return;
+useEffect(() => {
+  if (!modalCountry || !modalApiKey) return;
 
-    const fetchModalData = async () => {
-      try {
-        console.log(
-          "Cargando datos del modal para país:",
-          modalCountry,
-          "con API Key:",
-          modalApiKey
-        );
+  const fetchModalData = async () => {
+    try {
+      console.log(
+        "Cargando datos del modal para país:",
+        modalCountry,
+        "con API Key:",
+        modalApiKey
+      );
 
-        // Cargar listas de contacto
-        const listsResponse = await fetch(
-          "https://api.lula.com/v1/contact_lists?status=active",
-          {
-            headers: {
-              accept: "text/plain",
-              "X-API-Key": modalApiKey,
-            },
-          }
-        );
-        const lists = listsResponse.ok ? await listsResponse.json() : [];
+      const [listsResponse, seqsResponse, rulesResponse] = await Promise.all([
+        fetch(buildLulaUrl(modalCountry, '/contact_lists?status=active')),
+        fetch(buildLulaUrl(modalCountry, '/sequences?status=active')),
+        fetch(buildLulaUrl(modalCountry, '/redialing_rules'))
+      ]);
 
-        // Cargar secuencias
-        const seqsResponse = await fetch(
-          "https://api.lula.com/v1/sequences?status=active",
-          {
-            headers: {
-              accept: "text/plain",
-              "X-API-Key": modalApiKey,
-            },
-          }
-        );
-        const seqs = seqsResponse.ok ? await seqsResponse.json() : [];
+      const lists = listsResponse.ok ? await listsResponse.json() : [];
+      const seqs = seqsResponse.ok ? await seqsResponse.json() : [];
+      const rules = rulesResponse.ok ? await rulesResponse.json() : [];
 
-        // Cargar reglas de remarcado
-        const rulesResponse = await fetch(
-          "https://api.lula.com/v1/redialing_rules",
-          {
-            headers: {
-              accept: "application/json",
-              "X-API-Key": modalApiKey,
-            },
-          }
-        );
-        const rules = rulesResponse.ok ? await rulesResponse.json() : [];
+      console.log("Reglas cargadas para el modal:", rules);
 
-        console.log("Reglas cargadas para el modal:", rules);
+      setAvailableContactLists(lists);
+      setAvailableSequences(seqs);
+      setAvailableRules(rules);
+      setAvailableSequencesModal(seqs);
+      setAvailableContactListsModal(lists);
+      setAvailableRulesModal(rules);
+    } catch (error) {
+      console.error("Error al cargar datos de modal", error);
+      notification.error({
+        message: "Error al cargar recursos",
+        description: error.message,
+      });
+    }
+  };
 
-        setAvailableContactLists(lists);
-        setAvailableSequences(seqs);
-        setAvailableRules(rules);
-        setAvailableSequencesModal(seqs);
-        setAvailableContactListsModal(lists);
-        setAvailableRulesModal(rules);
-      } catch (error) {
-        console.error("Error al cargar datos de modal", error);
-        notification.error({
-          message: "Error al cargar recursos",
-          description: error.message,
-        });
-      }
-    };
+  fetchModalData();
+}, [modalCountry, modalApiKey]);
 
-    fetchModalData();
-  }, [modalCountry, modalApiKey]);
+const buildLulaUrl = (pais, path) => {
+  const paisEncoded = encodeURIComponent(pais);
+  return `${API_URL_GATEWAY_CONNECT}/gateway/lula/${paisEncoded}${path}`;
+};
 
   useEffect(() => {
     if (!selectedCountry) return;
@@ -316,13 +295,13 @@ const CampanasGail = () => {
     const fetchData = async () => {
       const [lists, seqs, rules] = await Promise.all([
         fetch(
-          `${API_URL_GATEWAY}/gateway/campanas/contact_lists/${selectedCountry}`
+          `${API_URL_GATEWAY_CONNECT}/gateway/campanas/contact_lists/${selectedCountry}`
         ).then((r) => r.json()),
         fetch(
-          `${API_URL_GATEWAY}/gateway/campanas/secuencias/${selectedCountry}`
+          `${API_URL_GATEWAY_CONNECT}/gateway/campanas/secuencias/${selectedCountry}`
         ).then((r) => r.json()),
         fetch(
-          `${API_URL_GATEWAY}/gateway/campanas/reglas/${selectedCountry}`
+          `${API_URL_GATEWAY_CONNECT}/gateway/campanas/reglas/${selectedCountry}`
         ).then((r) => r.json()),
       ]);
       setAvailableContactLists(lists);
@@ -333,249 +312,169 @@ const CampanasGail = () => {
     fetchData();
   }, [selectedCountry]);
 
-  const startGailCampaign = async (record) => {
-    const apiKey = getApiKeyForCountry(record.pais);
-    if (!apiKey) {
-      return notification.error({
-        message: "API‑Key no encontrada para el país.",
-      });
-    }
+const startGailCampaign = async (record) => {
 
-    const accion = "start";
+  const accion = record?.status === "paused" ? "resume" : "start"; // ajusta según cómo llegue status
 
-    try {
-      const res = await fetch(
-        `https://api.lula.com/v1/campaigns/${record.idCampana}/${accion}`,
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": apiKey,
-            accept: "application/json",
-          },
-        }
-      );
+  try {
+    const res = await fetch(
+      `${API_URL_GATEWAY_CONNECT}/gateway/campanas/campaigns/${encodeURIComponent(record.pais)}/${record.idCampana}/${accion}`,
+      { method: "POST" }
+    );
 
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        console.error("❌ Lula responde 4xx/5xx:", body);
-        throw new Error(body.message || `HTTP ${res.status}`);
-      }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.detail || body?.message || `HTTP ${res.status}`);
 
-      notification.success({
-        message:
-          accion === "resume"
-            ? "Campaña reanudada en Gail"
-            : "Campaña iniciada en Gail",
-      });
-      fetchCampanas();
-    } catch (err) {
-      notification.error({
-        message: "Error al iniciar campaña",
-        description: err.message,
-      });
-    }
-  };
+    notification.success({
+      message: accion === "resume" ? "Campaña reanudada" : "Campaña iniciada",
+    });
+    fetchCampanas();
+  } catch (err) {
+    notification.error({
+      message: "Error al iniciar campaña",
+      description: err.message,
+    });
+  }
+};
 
-  const stopGailCampaign = async (record) => {
-    const apiKey = getApiKeyForCountry(record.pais);
-    if (!apiKey)
-      return notification.error({
-        message: "API‑Key no encontrada para el país.",
-      });
 
-    try {
-      const res = await fetch(
-        `https://api.lula.com/v1/campaigns/${record.idCampana}/stop`,
-        {
-          method: "POST",
-          headers: { "X-API-Key": apiKey, accept: "text/plain" },
-        }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      notification.success({ message: "Campaña detenida en Gail" });
-      fetchCampanas();
-    } catch (err) {
-      notification.error({
-        message: "Error al detener campaña",
-        description: err.message,
-      });
-    }
-  };
+const stopGailCampaign = async (record) => {
+  try {
+    const res = await fetch(
+      `${API_URL_GATEWAY_CONNECT}/gateway/campanas/campaigns/${encodeURIComponent(record.pais)}/${record.idCampana}/stop`,
+      { method: "POST" }
+    );
 
-  const fetchContactLists = async () => {
-    try {
-      const activeResponse = await fetch(
-        "https://api.lula.com/v1/contact_lists?status=active",
-        {
-          headers: {
-            accept: "text/plain",
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!activeResponse.ok)
-        throw new Error(
-          `Error ${activeResponse.status} al obtener listas de contacto activas`
-        );
-      const activeContactLists = await activeResponse.json();
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.detail || body?.message || `HTTP ${res.status}`);
 
-      const archivedResponse = await fetch(
-        "https://api.lula.com/v1/contact_lists?status=archived",
-        {
-          headers: {
-            accept: "text/plain",
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!archivedResponse.ok)
-        throw new Error(
-          `Error ${archivedResponse.status} al obtener listas de contacto archivadas`
-        );
-      const archivedContactLists = await archivedResponse.json();
+    notification.success({ message: "Campaña detenida" });
+    fetchCampanas();
+  } catch (err) {
+    notification.error({
+      message: "Error al detener campaña",
+      description: err.message,
+    });
+  }
+};
 
-      const uniqueById = new Map();
-      [...activeContactLists, ...archivedContactLists].forEach((list) => {
-        uniqueById.set(list.id, list);
-      });
 
-      const allContactLists = Array.from(uniqueById.values());
+const fetchContactLists = async () => {
+  if (!apiKeyActiva || !paisSeleccionado) return;
+  
+  try {
+    const [activeResponse, archivedResponse] = await Promise.all([
+      fetch(buildLulaUrl(paisSeleccionado, '/contact_lists?status=active')),
+      fetch(buildLulaUrl(paisSeleccionado, '/contact_lists?status=archived'))
+    ]);
 
-      setContactLists(allContactLists);
-      setFilteredContactLists(allContactLists);
-    } catch (error) {
-      console.error("Error al obtener listas de contacto:", error);
-      notification.error({
-        message: `Error al obtener listas de contacto: ${error.message}`,
-      });
-    }
-  };
+    if (!activeResponse.ok) throw new Error(`Error ${activeResponse.status}`);
+    if (!archivedResponse.ok) throw new Error(`Error ${archivedResponse.status}`);
+
+    const activeContactLists = await activeResponse.json();
+    const archivedContactLists = await archivedResponse.json();
+
+    const uniqueById = new Map();
+    [...activeContactLists, ...archivedContactLists].forEach((list) => {
+      uniqueById.set(list.id, list);
+    });
+
+    const allContactLists = Array.from(uniqueById.values());
+    setContactLists(allContactLists);
+    setFilteredContactLists(allContactLists);
+  } catch (error) {
+    console.error("Error al obtener listas de contacto:", error);
+    notification.error({ message: `Error: ${error.message}` });
+  }
+};
 
   const fetchScripts = async (apiKey) => {
-    setLoadingScripts(true);
-    try {
-      const response = await fetch(
-        "https://api.lula.com/v1/scripts?direction=outbound&status=active",
-        {
-          headers: {
-            "X-API-Key": apiKey,
-            Accept: "application/json",
-          },
-        }
-      );
+  if (!paisSeleccionado) return;
+  
+  setLoadingScripts(true);
+  try {
+    const response = await fetch(
+      buildLulaUrl(paisSeleccionado, '/scripts?direction=outbound&status=active')
+    );
 
-      const data = await response.json();
-      setScriptOptions(
-        data.map((script) => ({ label: script.name, value: script.id }))
-      );
-    } catch (error) {
-      console.error("Error al obtener scripts:", error);
-      notification.error({ message: "No se pudieron cargar los scripts" });
-    } finally {
-      setLoadingScripts(false);
-    }
-  };
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    
+    const data = await response.json();
+    setScriptOptions(data.map((script) => ({ label: script.name, value: script.id })));
+  } catch (error) {
+    console.error("Error al obtener scripts:", error);
+    notification.error({ message: "No se pudieron cargar los scripts" });
+  } finally {
+    setLoadingScripts(false);
+  }
+};
 
   const fetchContactsInList = async (listId) => {
-    setLoadingContacts(true);
-    try {
-      const key = modalApiKey || apiKeyActiva;
-      const response = await fetch(
-        `https://api.lula.com/v1/contact_lists/${listId}/contacts`,
-        {
-          headers: {
-            accept: "application/json",
-            "X-API-Key": key,
-          },
-        }
-      );
-      if (!response.ok)
-        throw new Error(
-          `Error ${response.status} al obtener contactos de la lista`
-        );
-      const contactsData = await response.json();
-      setContactsInList(contactsData);
-      setContactsInListModalVisible(true);
-    } catch (error) {
-      console.error("Error al obtener contactos de la lista:", error);
-      notification.error({
-        message: `Error al obtener contactos de la lista: ${error.message}`,
-      });
-    } finally {
-      setLoadingContacts(false);
-    }
-  };
+  if (!paisSeleccionado) return;
+  
+  setLoadingContacts(true);
+  try {
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(
+      buildLulaUrl(pais, `/contact_lists/${listId}/contacts`)
+    );
+    
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    
+    const contactsData = await response.json();
+    setContactsInList(contactsData);
+    setContactsInListModalVisible(true);
+  } catch (error) {
+    console.error("Error al obtener contactos:", error);
+    notification.error({ message: `Error: ${error.message}` });
+  } finally {
+    setLoadingContacts(false);
+  }
+};
 
-  const fetchRedialingRules = async () => {
-    try {
-      console.log("API Key Activa para el país:", apiKeyActiva);
-
-      const response = await fetch("https://api.lula.com/v1/redialing_rules", {
-        headers: {
-          accept: "application/json",
-          "X-API-Key": apiKeyActiva,
-        },
-      });
-
-      if (!response.ok)
-        throw new Error(
-          `Error ${response.status} al obtener reglas de remarcado`
-        );
-
-      const allRules = await response.json();
-      console.log(
-        "Todas las reglas de remarcado para",
-        paisSeleccionado,
-        ":",
-        allRules
-      );
-
-      setRedialingRules(allRules || []);
-      setFilteredRedialingRules(allRules || []);
-    } catch (error) {
-      console.error("Error al obtener reglas de remarcado:", error);
-      notification.error({
-        message: `Error al obtener reglas de remarcado: ${error.message}`,
-      });
-    }
-  };
+const fetchRedialingRules = async () => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    const response = await fetch(buildLulaUrl(paisSeleccionado, '/redialing_rules'));
+    
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    
+    const allRules = await response.json();
+    setRedialingRules(allRules || []);
+    setFilteredRedialingRules(allRules || []);
+  } catch (error) {
+    console.error("Error al obtener reglas de remarcado:", error);
+    notification.error({ message: `Error: ${error.message}` });
+  }
+};
 
   const fetchRedialingRuleDetails = async (ruleId) => {
-    setLoadingRedialingRuleDetails(true);
-    try {
-      const response = await fetch(
-        `https://api.lula.com/v1/redialing_rules/${ruleId}`,
-        {
-          headers: {
-            accept: "text/plain",
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!response.ok)
-        throw new Error(
-          `Error ${response.status} al obtener detalles de la regla`
-        );
-      const ruleDetails = await response.json();
-      setCurrentRedialingRuleDetails(ruleDetails);
-      setRedialingRuleDetailModalVisible(true);
-    } catch (error) {
-      console.error(
-        "Error al obtener detalles de la regla de remarcado:",
-        error
-      );
-      notification.error({
-        message: `Error al obtener detalles de la regla: ${error.message}`,
-      });
-    } finally {
-      setLoadingRedialingRuleDetails(false);
-    }
-  };
+  if (!paisSeleccionado) return;
+  
+  setLoadingRedialingRuleDetails(true);
+  try {
+    const response = await fetch(
+      buildLulaUrl(paisSeleccionado, `/redialing_rules/${ruleId}`)
+    );
+    
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    
+    const ruleDetails = await response.json();
+    setCurrentRedialingRuleDetails(ruleDetails);
+    setRedialingRuleDetailModalVisible(true);
+  } catch (error) {
+    console.error("Error al obtener detalles de regla:", error);
+    notification.error({ message: `Error: ${error.message}` });
+  } finally {
+    setLoadingRedialingRuleDetails(false);
+  }
+};
 
   const fetchCampanas = async () => {
     try {
       const responseBackend = await fetch(
-        `${API_URL_GATEWAY}/gateway/campanas/dar`
+        `${API_URL_GATEWAY_CONNECT}/gateway/campanas/dar`
       );
       const backendData = await responseBackend.json();
 
@@ -583,12 +482,9 @@ const CampanasGail = () => {
       for (const country of Object.keys(API_KEYS_BY_COUNTRY)) {
         try {
           const apiKey = API_KEYS_BY_COUNTRY[country];
-          const response = await fetch("https://api.lula.com/v1/campaigns", {
-            headers: {
-              "X-API-Key": apiKey,
-              accept: "application/json",
-            },
-          });
+          const response = await fetch(
+  `${API_URL_GATEWAY_CONNECT}/gateway/lula/${encodeURIComponent(country)}/campaigns`
+);
 
           if (response.ok) {
             const data = await response.json();
@@ -597,7 +493,7 @@ const CampanasGail = () => {
                 ...c,
                 idCampana: c.id,
                 descripcionCampana: c.name,
-                origen: "Gail",
+                origen: "IA - NATALIA",
                 pais: country,
               }))
             );
@@ -622,51 +518,29 @@ const CampanasGail = () => {
     }
   };
 
-  const fetchSequences = async () => {
-    try {
-      const activeResponse = await fetch(
-        "https://api.lula.com/v1/sequences?status=active",
-        {
-          headers: {
-            accept: "text/plain",
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!activeResponse.ok)
-        throw new Error(
-          `Error ${activeResponse.status} al obtener secuencias activas`
-        );
-      const activeSequences = await activeResponse.json();
+const fetchSequences = async () => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    const [activeResponse, archivedResponse] = await Promise.all([
+      fetch(buildLulaUrl(paisSeleccionado, '/sequences?status=active')),
+      fetch(buildLulaUrl(paisSeleccionado, '/sequences?status=archived'))
+    ]);
 
-      const archivedResponse = await fetch(
-        "https://api.lula.com/v1/sequences?status=archived",
-        {
-          headers: {
-            accept: "text/plain",
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!archivedResponse.ok)
-        throw new Error(
-          `Error ${archivedResponse.status} al obtener secuencias archivadas`
-        );
-      const archivedSequences = await archivedResponse.json();
+    if (!activeResponse.ok) throw new Error(`Error ${activeResponse.status}`);
+    if (!archivedResponse.ok) throw new Error(`Error ${archivedResponse.status}`);
 
-      const allSequences = [
-        ...(activeSequences || []),
-        ...(archivedSequences || []),
-      ];
-      setSequences(allSequences);
-      setFilteredSequences(allSequences);
-    } catch (error) {
-      console.error("Error al obtener secuencias:", error);
-      notification.error({
-        message: `Error al obtener secuencias: ${error.message}`,
-      });
-    }
-  };
+    const activeSequences = await activeResponse.json();
+    const archivedSequences = await archivedResponse.json();
+
+    const allSequences = [...(activeSequences || []), ...(archivedSequences || [])];
+    setSequences(allSequences);
+    setFilteredSequences(allSequences);
+  } catch (error) {
+    console.error("Error al obtener secuencias:", error);
+    notification.error({ message: `Error: ${error.message}` });
+  }
+};
 
   const fetchCampaignTouchpoints = async (campaignId, campaignName) => {
   setTouchpointsLoading(true);
@@ -684,8 +558,10 @@ const CampanasGail = () => {
   const all = [];
 
   const fetchPage = async (p) => {
-    const url = `https://api.lula.com/v1/campaigns/${campaignId}/touchpoints?includeTranscripts=true&page=${p}&size=${SIZE}`;
-    const res = await fetch(url, { headers });
+const url = `${API_URL_GATEWAY_CONNECT}/gateway/lula/${encodeURIComponent(selectedCountry)}/campaigns/${campaignId}/touchpoints?includeTranscripts=true&page=${p}&size=${SIZE}`;
+const res = await fetch(url);
+
+
     if (res.status === 429 || res.status >= 500) {
       await new Promise((r) => setTimeout(r, 1000));
       return fetchPage(p);
@@ -855,207 +731,160 @@ const CampanasGail = () => {
   }, [searchRedialingRule, availableRules]);
 
   const editSequence = async (record) => {
-    if (!apiKeyActiva) {
-      notification.error({
-        message:
-          "No hay API Key activa seleccionada. Selecciona un país primero.",
-      });
-      return;
+  if (!paisSeleccionado) {
+    notification.error({ message: "Selecciona un país primero." });
+    return;
+  }
+  
+  try {
+    const pais = modalCountry || paisSeleccionado;
+    await fetchScripts(null);
+
+    const response = await fetch(buildLulaUrl(pais, `/sequences/${record.id}`));
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error ${response.status}: ${errorText}`);
     }
-    try {
-      await fetchScripts(modalApiKey || apiKeyActiva);
 
-      const response = await fetch(
-        `https://api.lula.com/v1/sequences/${record.id}`,
-        {
-          headers: {
-            "X-API-Key": modalApiKey || apiKeyActiva,
-            accept: "application/json",
-          },
-        }
-      );
+    const data = await response.json();
+    setEditingSequence(data);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          "Error al obtener secuencia completa:",
-          response.status,
-          errorText
-        );
-        throw new Error(`Error ${response.status}: ${errorText}`);
-      }
+    form.setFieldsValue({
+      name: data.name,
+      description: data.description,
+      criteria: data.criteria,
+      status: data.status,
+      timezone: data.timezone,
+      schedules: data.schedules.map((s) => ({
+        dayOffset: s.dayOffset,
+        delayInMinutes: s.delayInMinutes,
+        time: moment().hour(s.hour).minute(s.minute),
+        sequenceScripts: s.scripts?.map((sc) => sc.id) || [],
+      })),
+    });
 
-      const data = await response.json();
-
-      setEditingSequence(data);
-
-      form.setFieldsValue({
-        name: data.name,
-        description: data.description,
-        criteria: data.criteria,
-        status: data.status,
-        timezone: data.timezone,
-        schedules: data.schedules.map((s) => {
-          return {
-            dayOffset: s.dayOffset,
-            delayInMinutes: s.delayInMinutes,
-            time: moment().hour(s.hour).minute(s.minute),
-            sequenceScripts: s.scripts?.map((sc) => sc.id) || [],
-          };
-        }),
-      });
-
-      setEditSequenceModalVisible(true);
-    } catch (error) {
-      console.error("Error al obtener secuencia completa:", error);
-      notification.error({ message: "No se pudo cargar la secuencia" });
-    }
-  };
+    setEditSequenceModalVisible(true);
+  } catch (error) {
+    console.error("Error al obtener secuencia:", error);
+    notification.error({ message: "No se pudo cargar la secuencia" });
+  }
+};
 
   const handleUpdateSequence = async () => {
-    try {
-      const values = await form.validateFields();
+  if (!paisSeleccionado) return;
+  
+  try {
+    const values = await form.validateFields();
 
-      if (!values.schedules || values.schedules.length === 0) {
-        notification.error({
-          message: "Debe agregar al menos un horario (schedule).",
-        });
-        return;
+    if (!values.schedules || values.schedules.length === 0) {
+      notification.error({ message: "Debe agregar al menos un horario." });
+      return;
+    }
+
+    const transformedSchedules = values.schedules.map((s) => {
+      const scriptIds = Array.isArray(s.sequenceScripts)
+        ? s.sequenceScripts.map((sc) => (typeof sc === "object" ? sc.value || sc.id : sc))
+        : [];
+
+      if (scriptIds.length === 0) {
+        throw new Error("Cada horario debe tener al menos un Script ID.");
       }
 
-      const transformedSchedules = values.schedules.map((s) => {
-        const scriptIds = Array.isArray(s.sequenceScripts)
-          ? s.sequenceScripts.map((sc) =>
-              typeof sc === "object" ? sc.value || sc.id : sc
-            )
-          : [];
-
-        if (scriptIds.length === 0) {
-          throw new Error(
-            "Cada horario debe tener al menos un Script ID asignado."
-          );
-        }
-
-        const hour = s.time.hour();
-        const minute = s.time.minute();
-
-        return {
-          dayOffset: s.dayOffset,
-          delayInMinutes: s.delayInMinutes,
-          hour,
-          minute,
-          sequenceScripts: scriptIds,
-        };
-      });
-
-      const payload = {
-        name: values.name,
-        description: values.description,
-        criteria: "true",
-        timezone: values.timezone,
-        schedules: transformedSchedules,
+      return {
+        dayOffset: s.dayOffset,
+        delayInMinutes: s.delayInMinutes,
+        hour: s.time.hour(),
+        minute: s.time.minute(),
+        sequenceScripts: scriptIds,
       };
+    });
 
-      console.log("Payload enviado a Lula:", JSON.stringify(payload, null, 2));
+    const payload = {
+      name: values.name,
+      description: values.description,
+      criteria: "true",
+      timezone: values.timezone,
+      schedules: transformedSchedules,
+    };
 
-      const response = await fetch(
-        `https://api.lula.com/v1/sequences/${editingSequence.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": modalApiKey || apiKeyActiva,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al actualizar la secuencia`
-        );
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(
+      buildLulaUrl(pais, `/sequences/${editingSequence.id}`),
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
+    );
 
-      notification.success({ message: "Secuencia actualizada correctamente" });
-      setEditSequenceModalVisible(false);
-      setEditingSequence(null);
-      form.resetFields();
-      fetchSequences();
-    } catch (errorInfo) {
-      console.error("Error en handleUpdateSequence:", errorInfo);
-      let errorMessage = "Error al actualizar la secuencia.";
-      if (errorInfo.message) {
-        errorMessage = errorInfo.message;
-      } else if (errorInfo.errorFields) {
-        errorMessage = "Por favor revise los campos del formulario.";
-      }
-      notification.error({ message: errorMessage });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
     }
-  };
 
-  const archiveSequence = async (id) => {
-    try {
-      const response = await fetch(
-        `https://api.lula.com/v1/sequences/${id}/archive`,
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": modalApiKey || apiKeyActiva,
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al archivar la secuencia`
-        );
-      }
-      notification.success({ message: "Secuencia archivada exitosamente" });
-      fetchSequences();
-    } catch (error) {
-      console.error("Error en archiveSequence:", error);
-      notification.error({
-        message: error.message || "Error al archivar la secuencia",
-      });
-    }
-  };
+    notification.success({ message: "Secuencia actualizada correctamente" });
+    setEditSequenceModalVisible(false);
+    setEditingSequence(null);
+    form.resetFields();
+    fetchSequences();
+  } catch (errorInfo) {
+    console.error("Error en handleUpdateSequence:", errorInfo);
+    notification.error({ message: errorInfo.message || "Error al actualizar" });
+  }
+};
 
-  const restoreSequence = async (id) => {
-    try {
-      const response = await fetch(
-        `https://api.lula.com/v1/sequences/${id}/restore`,
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": modalApiKey || apiKeyActiva,
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al restaurar la secuencia`
-        );
-      }
-      notification.success({ message: "Secuencia restaurada exitosamente" });
-      fetchSequences();
-    } catch (error) {
-      console.error("Error en restoreSequence:", error);
-      notification.error({
-        message: error.message || "Error al restaurar la secuencia",
-      });
+ const archiveSequence = async (id) => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(
+      buildLulaUrl(pais, `/sequences/${id}/archive`),
+      { method: "POST" }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
     }
-  };
+    
+    notification.success({ message: "Secuencia archivada exitosamente" });
+    fetchSequences();
+  } catch (error) {
+    console.error("Error en archiveSequence:", error);
+    notification.error({ message: error.message || "Error al archivar" });
+  }
+};
+
+const restoreSequence = async (id) => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(
+      buildLulaUrl(pais, `/sequences/${id}/restore`),
+      { method: "POST" }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
+    }
+    
+    notification.success({ message: "Secuencia restaurada exitosamente" });
+    fetchSequences();
+  } catch (error) {
+    console.error("Error en restoreSequence:", error);
+    notification.error({ message: error.message || "Error al restaurar" });
+  }
+};
 
   const getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
@@ -1113,236 +942,171 @@ const CampanasGail = () => {
     setSearchTextGlobal("");
   };
 
-  const handleCreateContactList = async () => {
-    try {
-      if (!newContactListName) {
-        notification.error({
-          message: "El nombre de la lista de contacto no puede estar vacío.",
-        });
-        return;
-      }
-
-      const payload = {
-        name: newContactListName,
-        description: newContactListDescription,
-      };
-
-      const key = modalApiKey || apiKeyActiva;
-
-      const response = await fetch("https://api.lula.com/v1/contact_lists", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": key,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al crear la lista de contacto`
-        );
-      }
-
-      const newList = await response.json();
-
-      setAvailableContactLists((prev) => [...prev, newList]);
-      setFilteredContactLists((prev) => [...prev, newList]);
-
-      setAvailableContactListsModal((prev) => [...prev, newList]);
-
-      notification.success({
-        message: "Lista de contacto creada exitosamente",
-      });
-      setCreateContactListModalVisible(false);
-      setNewContactListName("");
-      setNewContactListDescription("");
-    } catch (error) {
-      console.error("Error en handleCreateContactList:", error);
-      notification.error({
-        message: error.message || "Error al crear la lista de contacto",
-      });
+const handleCreateContactList = async () => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    if (!newContactListName) {
+      notification.error({ message: "El nombre no puede estar vacío." });
+      return;
     }
-  };
+
+    const payload = {
+      name: newContactListName,
+      description: newContactListDescription,
+    };
+
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(buildLulaUrl(pais, '/contact_lists'), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
+    }
+
+    const newList = await response.json();
+
+    setAvailableContactLists((prev) => [...prev, newList]);
+    setFilteredContactLists((prev) => [...prev, newList]);
+    setAvailableContactListsModal((prev) => [...prev, newList]);
+
+    notification.success({ message: "Lista de contacto creada exitosamente" });
+    setCreateContactListModalVisible(false);
+    setNewContactListName("");
+    setNewContactListDescription("");
+  } catch (error) {
+    console.error("Error en handleCreateContactList:", error);
+    notification.error({ message: error.message || "Error al crear lista" });
+  }
+};
 
   const handleCreateNewSequence = async () => {
-    try {
-      const values = await form.validateFields();
-      const apiKey = modalApiKey || apiKeyActiva;
+  if (!paisSeleccionado) return;
+  
+  try {
+    const values = await form.validateFields();
 
-      if (!values.schedules || values.schedules.length === 0) {
-        notification.error({
-          message: "Debe agregar al menos un horario (schedule).",
-        });
-        return;
+    if (!values.schedules || values.schedules.length === 0) {
+      notification.error({ message: "Debe agregar al menos un horario." });
+      return;
+    }
+
+    const transformedSchedules = values.schedules.map((s) => {
+      const scriptIds = Array.isArray(s.sequenceScripts)
+        ? s.sequenceScripts.map((sc) => (typeof sc === "object" ? sc.value || sc.id : sc))
+        : [];
+
+      if (scriptIds.length === 0) {
+        throw new Error("Cada horario debe tener al menos un Script ID.");
       }
 
-      const transformedSchedules = values.schedules.map((s) => {
-        const scriptIds = Array.isArray(s.sequenceScripts)
-          ? s.sequenceScripts.map((sc) =>
-              typeof sc === "object" ? sc.value || sc.id : sc
-            )
-          : [];
-
-        if (scriptIds.length === 0) {
-          throw new Error(
-            "Cada horario debe tener al menos un Script ID asignado."
-          );
-        }
-
-        const hour = s.hour;
-        const minute = s.minute;
-
-        return {
-          dayOffset: s.dayOffset,
-          delayInMinutes: s.delayInMinutes,
-          hour,
-          minute,
-          sequenceScripts: scriptIds,
-        };
-      });
-
-      const availableScriptIds = scriptOptions.map((opt) => opt.value);
-      transformedSchedules.forEach((schedule) => {
-        schedule.sequenceScripts.forEach((scriptId) => {
-          if (!availableScriptIds.includes(scriptId)) {
-            throw new Error(
-              `Script ID inválido: ${scriptId}. No está disponible en Lula.`
-            );
-          }
-        });
-      });
-
-      const payload = {
-        name: values.name,
-        description: values.description,
-        criteria: "true",
-        timezone: values.timezone,
-        schedules: transformedSchedules,
+      return {
+        dayOffset: s.dayOffset,
+        delayInMinutes: s.delayInMinutes,
+        hour: s.hour,
+        minute: s.minute,
+        sequenceScripts: scriptIds,
       };
+    });
 
-      console.log("Payload enviado a Lula:", JSON.stringify(payload, null, 2));
+    const payload = {
+      name: values.name,
+      description: values.description,
+      criteria: "true",
+      timezone: values.timezone,
+      schedules: transformedSchedules,
+    };
 
-      const response = await fetch(`https://api.lula.com/v1/sequences`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey,
-        },
-        body: JSON.stringify(payload),
-      });
+    const pais = modalCountry || paisSeleccionado;
+    const response = await fetch(buildLulaUrl(pais, '/sequences'), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      if (!response.ok) {
-        const responseText = await response.text();
-        console.error("Respuesta completa de error:", responseText);
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch (err) {
-          errorData = { message: responseText };
-        }
-        throw new Error(
-          errorData.message || `Error ${response.status} al crear la secuencia`
-        );
+    if (!response.ok) {
+      const responseText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (err) {
+        errorData = { message: responseText };
       }
-
-      notification.success({ message: "Secuencia creada correctamente" });
-      setCreateSequenceModalVisible(false);
-      form.resetFields();
-      fetchSequences();
-
-      const newSequence = await response.json();
-
-      setSequences((prev) => [...prev, newSequence]);
-      setFilteredSequences((prev) => [...prev, newSequence]);
-      setAvailableSequences((prev) => [...prev, newSequence]);
-
-      if (modalApiKey) {
-        setAvailableSequencesModal((prev) => [...prev, newSequence]);
-      }
-
-      notification.success({ message: "Secuencia creada correctamente" });
-      setCreateSequenceModalVisible(false);
-      form.resetFields();
-    } catch (errorInfo) {
-      console.error("Error en handleCreateNewSequence:", errorInfo);
-      let errorMessage = "Error al crear la secuencia.";
-      if (errorInfo.message) {
-        errorMessage = errorInfo.message;
-      } else if (errorInfo.errorFields) {
-        errorMessage = "Por favor revise los campos del formulario.";
-      }
-      notification.error({ message: errorMessage });
+      throw new Error(errorData.message || `Error ${response.status}`);
     }
-  };
 
-  const archiveContactList = async (id) => {
-    try {
-      const response = await fetch(
-        `https://api.lula.com/v1/contact_lists/${id}/archive`,
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al archivar la lista de contacto`
-        );
-      }
-      notification.success({
-        message: "Lista de contacto archivada exitosamente",
-      });
-      fetchContactLists();
-    } catch (error) {
-      console.error("Error en archiveContactList:", error);
-      notification.error({
-        message: error.message || "Error al archivar la lista de contacto",
-      });
+    const newSequence = await response.json();
+
+    setSequences((prev) => [...prev, newSequence]);
+    setFilteredSequences((prev) => [...prev, newSequence]);
+    setAvailableSequences((prev) => [...prev, newSequence]);
+
+    if (modalApiKey) {
+      setAvailableSequencesModal((prev) => [...prev, newSequence]);
     }
-  };
+
+    notification.success({ message: "Secuencia creada correctamente" });
+    setCreateSequenceModalVisible(false);
+    form.resetFields();
+  } catch (errorInfo) {
+    console.error("Error en handleCreateNewSequence:", errorInfo);
+    notification.error({ message: errorInfo.message || "Error al crear secuencia" });
+  }
+};
+
+const archiveContactList = async (id) => {
+  if (!paisSeleccionado) return;
+  
+  try {
+    const response = await fetch(
+      buildLulaUrl(paisSeleccionado, `/contact_lists/${id}/archive`),
+      { method: "POST" }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
+    }
+    
+    notification.success({ message: "Lista archivada exitosamente" });
+    fetchContactLists();
+  } catch (error) {
+    console.error("Error en archiveContactList:", error);
+    notification.error({ message: error.message || "Error al archivar" });
+  }
+};
 
   const restoreContactList = async (id) => {
-    try {
-      const response = await fetch(
-        `https://api.lula.com/v1/contact_lists/${id}/restore`,
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": apiKeyActiva,
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Error al procesar la respuesta del servidor.",
-        }));
-        throw new Error(
-          errorData.message ||
-            `Error ${response.status} al restaurar la lista de contacto`
-        );
-      }
-      notification.success({
-        message: "Lista de contacto restaurada exitosamente",
-      });
-      fetchContactLists();
-    } catch (error) {
-      console.error("Error en restoreContactList:", error);
-      notification.error({
-        message: error.message || "Error al restaurar la lista de contacto",
-      });
+  if (!paisSeleccionado) return;
+  
+  try {
+    const response = await fetch(
+      buildLulaUrl(paisSeleccionado, `/contact_lists/${id}/restore`),
+      { method: "POST" }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: "Error al procesar respuesta.",
+      }));
+      throw new Error(errorData.message || `Error ${response.status}`);
     }
-  };
+    
+    notification.success({ message: "Lista restaurada exitosamente" });
+    fetchContactLists();
+  } catch (error) {
+    console.error("Error en restoreContactList:", error);
+    notification.error({ message: error.message || "Error al restaurar" });
+  }
+};
 
   const handleAddContact = (listId) => {
     setSelectedContactListForAddingContact(listId);
@@ -1353,104 +1117,99 @@ const CampanasGail = () => {
     });
   };
 
-  const handleSaveContact = async () => {
-    try {
-      const values = await addContactForm.validateFields();
+const handleSaveContact = async () => {
+  try {
+    const values = await addContactForm.validateFields();
 
-      if (!values.phoneNumbers || values.phoneNumbers.length === 0) {
-        throw new Error("Debes ingresar al menos un número de teléfono.");
-      }
-
-      const invalidNumber = values.phoneNumbers.find(
-        (p) => !p.number.startsWith("+")
-      );
-      if (invalidNumber) {
-        throw new Error(
-          "El número debe incluir el código de país con +, por ejemplo: +573001234567"
-        );
-      }
-      const additionalData = values.additionalData
-        ? values.additionalData.reduce((acc, item) => {
-            if (item.key && item.value && item.value.trim() !== "") {
-              acc[item.key] = item.value;
-            }
-            return acc;
-          }, {})
-        : {};
-
-      const payload = {
-        requests: bulkContacts.map((contact) => ({
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-          businessName: contact.businessName
-            ? String(contact.businessName)
-            : "",
-          emails: contact.emails,
-          phoneNumbers: contact.phoneNumbers,
-          additionalData: contact.additionalData,
-        })),
-      };
-
-      const key = modalApiKey || apiKeyActiva;
-      const createResponse = await fetch(
-        "https://api.lula.com/v1/contacts/bulk_add",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": key,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const createdContacts = await createResponse.json();
-
-      if (!createResponse.ok || createdContacts.succeeded === 0) {
-        const firstError =
-          createdContacts.results?.[0]?.errors?.[0]?.message ||
-          "Error desconocido";
-        console.error("❌ Error en bulk_add:", firstError);
-        throw new Error(`Error creando contacto: ${firstError}`);
-      }
-
-      const createdContactId = createdContacts.results?.[0]?.id;
-      if (!createdContactId) {
-        console.error(
-          "❌ No se obtuvo el ID del contacto creado:",
-          createdContacts
-        );
-        throw new Error("No se pudo obtener el ID del contacto creado.");
-      }
-
-      const associateResponse = await fetch(
-        `https://api.lula.com/v1/contact_lists/${selectedContactListForAddingContact}/add`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": key,
-          },
-          body: JSON.stringify({ contactIds: [createdContactId] }),
-        }
-      );
-
-      if (!associateResponse.ok) {
-        const errorText = await associateResponse.text();
-        console.error("❌ Error al asociar contacto a lista:", errorText);
-        throw new Error(`Error asociando contacto a la lista: ${errorText}`);
-      }
-
-      notification.success({ message: "Contacto añadido exitosamente" });
-      setAddContactModalVisible(false);
-      fetchContactsInList(selectedContactListForAddingContact);
-    } catch (error) {
-      console.error("Error en handleSaveContact:", error);
-      notification.error({
-        message: error.message || "Error al añadir contacto",
-      });
+    if (!values.phoneNumbers || values.phoneNumbers.length === 0) {
+      throw new Error("Debes ingresar al menos un número de teléfono.");
     }
-  };
+
+    const invalidNumber = values.phoneNumbers.find(
+      (p) => !p.number.startsWith("+")
+    );
+    if (invalidNumber) {
+      throw new Error(
+        "El número debe incluir el código de país con +, por ejemplo: +573001234567"
+      );
+    }
+
+    const additionalData = values.additionalData
+      ? values.additionalData.reduce((acc, item) => {
+          if (item.key && item.value && item.value.trim() !== "") {
+            acc[item.key] = item.value;
+          }
+          return acc;
+        }, {})
+      : {};
+
+    const payload = {
+      requests: bulkContacts.map((contact) => ({
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        businessName: contact.businessName
+          ? String(contact.businessName)
+          : "",
+        emails: contact.emails,
+        phoneNumbers: contact.phoneNumbers,
+        additionalData: contact.additionalData,
+      })),
+    };
+
+    const pais = modalCountry || paisSeleccionado;
+    const createResponse = await fetch(
+      buildLulaUrl(pais, '/contacts/bulk_add'),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const createdContacts = await createResponse.json();
+
+    if (!createResponse.ok || createdContacts.succeeded === 0) {
+      const firstError =
+        createdContacts.results?.[0]?.errors?.[0]?.message ||
+        "Error desconocido";
+      console.error("❌ Error en bulk_add:", firstError);
+      throw new Error(`Error creando contacto: ${firstError}`);
+    }
+
+    const createdContactId = createdContacts.results?.[0]?.id;
+    if (!createdContactId) {
+      console.error(
+        "❌ No se obtuvo el ID del contacto creado:",
+        createdContacts
+      );
+      throw new Error("No se pudo obtener el ID del contacto creado.");
+    }
+
+    const associateResponse = await fetch(
+      buildLulaUrl(pais, `/contact_lists/${selectedContactListForAddingContact}/add`),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: [createdContactId] }),
+      }
+    );
+
+    if (!associateResponse.ok) {
+      const errorText = await associateResponse.text();
+      console.error("❌ Error al asociar contacto a lista:", errorText);
+      throw new Error(`Error asociando contacto a la lista: ${errorText}`);
+    }
+
+    notification.success({ message: "Contacto añadido exitosamente" });
+    setAddContactModalVisible(false);
+    fetchContactsInList(selectedContactListForAddingContact);
+  } catch (error) {
+    console.error("Error en handleSaveContact:", error);
+    notification.error({
+      message: error.message || "Error al añadir contacto",
+    });
+  }
+};
 
   const handleAddBackendCampaign = () => {
     setNewDescripcion("");
@@ -1471,7 +1230,7 @@ const CampanasGail = () => {
   const handleDeleteBackendCampaign = async (idCampana) => {
     try {
       const response = await fetch(
-        `${API_URL_GATEWAY}/gateway/campanas/eliminar`,
+        `${API_URL_GATEWAY_CONNECT}/gateway/campanas/eliminar`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -1504,8 +1263,8 @@ const CampanasGail = () => {
       };
 
       const url = selectedCampaignId
-        ? `${API_URL_GATEWAY}/gateway/campanas/editar`
-        : `${API_URL_GATEWAY}/gateway/campanas/crear`;
+        ? `${API_URL_GATEWAY_CONNECT}/gateway/campanas/editar`
+        : `${API_URL_GATEWAY_CONNECT}/gateway/campanas/crear`;
 
       const method = selectedCampaignId ? "PUT" : "POST";
 
@@ -1549,279 +1308,141 @@ const CampanasGail = () => {
     setLulaCreateModalVisible(true);
   };
 
-  const handleSaveLulaCampaign = async () => {
-    const campaignNameToUse = newDescripcion || selectedCampaignName;
+const handleSaveLulaCampaign = async () => {
+  const campaignNameToUse = newDescripcion || selectedCampaignName;
 
-    if (
-      !selectedSequence ||
-      !selectedContactList ||
-      !selectedRedialingRule ||
-      !campaignNameToUse
-    ) {
-      notification.error({ message: "Todos los campos son obligatorios" });
-      return;
-    }
-    const contactList = availableContactListsModal.find(
-      (l) => l.id === selectedContactList
-    );
-    const sequence = availableSequencesModal.find(
-      (s) => s.id === selectedSequence
-    );
-    const redialingRule = availableRulesModal.find(
-      (r) => r.id === selectedRedialingRule
-    );
+  if (!selectedSequence || !selectedContactList || !selectedRedialingRule || !campaignNameToUse) {
+    notification.error({ message: "Todos los campos son obligatorios" });
+    return;
+  }
 
-    const contactListPayload = {
-      id: contactList.id,
-      name: contactList.name,
-      description: contactList.description || "",
+  if (!modalCountry) {
+    notification.error({ message: "Debes seleccionar un país." });
+    return;
+  }
+
+  const contactList = availableContactListsModal.find((l) => l.id === selectedContactList);
+  const sequence = availableSequencesModal.find((s) => s.id === selectedSequence);
+  const redialingRule = availableRulesModal.find((r) => r.id === selectedRedialingRule);
+
+  if (!contactList || !sequence || !redialingRule) {
+    notification.error({ message: "Uno o más recursos seleccionados no son válidos" });
+    return;
+  }
+
+  setCreatingCampaign(true);
+
+  try {
+    const campaignData = {
+      name: campaignNameToUse,
+      description: campaignNameToUse,
+      status: "inactive",
+      timezone: "America/Bogota",
+      sequences: [{ sequenceId: selectedSequence, rank: 0 }],
+      contactLists: [{
+        id: contactList.id,
+        name: contactList.name,
+        description: contactList.description || "",
+      }],
+      redialingRules: selectedRedialingRule,
+      criteria: { source: "auto" },
     };
 
-    if (!contactList || !sequence || !redialingRule) {
-      notification.error({
-        message: "Uno o más recursos seleccionados no son válidos",
-      });
-      return;
+    const lulaResponse = await fetch(buildLulaUrl(modalCountry, '/campaigns'), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(campaignData),
+    });
+
+    if (!lulaResponse.ok) {
+      const responseText = await lulaResponse.text();
+      console.error("Error de Lula:", responseText);
+      
+      let errorMessage = `Error ${lulaResponse.status}: ${lulaResponse.statusText}`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage;
+      } catch (e) {
+      }
+      
+      throw new Error(errorMessage);
     }
-    if (!modalCountry) {
-      notification.error({ message: "Debes seleccionar un país." });
-      return;
-    }
 
-    setCreatingCampaign(true);
+    const lulaCampaign = await lulaResponse.json();
+    const lulaCampaignId = lulaCampaign.id;
 
-    try {
-      const sequenceDetails = sequences.find((s) => s.id === selectedSequence);
-      const contactListDetails = contactLists.find(
-        (c) => c.id === selectedContactList
-      );
-      const redialingRuleDetails = redialingRules.find(
-        (r) => r.id === selectedRedialingRule
-      );
+    // Obtener contactos de la lista
+    const contactsResponse = await fetch(
+      buildLulaUrl(modalCountry, `/contact_lists/${selectedContactList}/contacts`)
+    );
+    
+    const contactsData = contactsResponse.ok ? await contactsResponse.json() : { data: [] };
 
-      if (sequenceDetails?.status !== "active") {
-        console.warn(
-          `⚠️ La secuencia está en estado: ${sequenceDetails?.status}`
-        );
-      }
-      if (contactListDetails?.status !== "active") {
-        console.warn(
-          `⚠️ La lista de contactos está en estado: ${contactListDetails?.status}`
-        );
-      }
-      if (redialingRuleDetails?.status !== "active") {
-        console.warn(
-          `⚠️ La regla de remarcado está en estado: ${redialingRuleDetails?.status}`
-        );
-      }
+    // Registrar en backend
+    const backendPayload = {
+      idCampana: lulaCampaignId,
+      name: selectedCampaignName,
+      description: newDescripcion || selectedCampaignName,
+      status: "active",
+      timezone: "America/Bogota",
+      pais: modalCountry,
+      contactList: {
+        id: contactList.id,
+        name: contactList.name,
+        description: contactList.description || "",
+      },
+      sequence: {
+        id: sequence.id,
+        name: sequence.name,
+        description: sequence.description || "",
+      },
+      redialingRule: {
+        id: redialingRule.id,
+        name: redialingRule.name,
+        outcomes: redialingRule.outcomes || [],
+        systemActions: redialingRule.systemActions || {},
+      },
+      contactos: (contactsData.data || []).map((c) => ({
+        id: c.id,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        businessName: c.businessName,
+        source: c.source,
+        status: c.status,
+        phoneNumbers: c.phoneNumbers,
+        additionalData: c.additionalData,
+      })),
+    };
 
-      const uuidRegex =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(selectedSequence)) {
-        console.error(
-          "❌ Formato de UUID inválido para secuencia:",
-          selectedSequence
-        );
-      }
-      if (!uuidRegex.test(selectedContactList)) {
-        console.error(
-          "❌ Formato de UUID inválido para lista de contactos:",
-          selectedContactList
-        );
-      }
-      if (!uuidRegex.test(selectedRedialingRule)) {
-        console.error(
-          "❌ Formato de UUID inválido para regla de remarcado:",
-          selectedRedialingRule
-        );
-      }
-
-      const campaignData = {
-        name: campaignNameToUse,
-        description: campaignNameToUse,
-        status: "inactive",
-        timezone: "America/Bogota",
-        sequences: [{ sequenceId: selectedSequence, rank: 0 }],
-        contactLists: [contactListPayload],
-        redialingRules: selectedRedialingRule,
-        criteria: { source: "auto" },
-      };
-      console.log(
-        "Payload enviado a Lula:",
-        JSON.stringify(campaignData, null, 2)
-      );
-
-      const alternativeCampaignData = {
-        name: selectedCampaignName,
-        description: newDescripcion || selectedCampaignName,
-        status: "active",
-        timezone: "America/Bogota",
-        sequences: [{ sequenceId: selectedSequence, rank: 0 }],
-        contactLists: [contactListPayload],
-        redialingRules: selectedRedialingRule,
-        criteria: { source: "auto" },
-      };
-
-      console.log(
-        "Payload alternativo preparado:",
-        JSON.stringify(alternativeCampaignData, null, 2)
-      );
-
-      const lulaResponse = await fetch("https://api.lula.com/v1/campaigns", {
+    const backendResponse = await fetch(
+      `${API_URL_GATEWAY_CONNECT}/gateway/campanas/registrar-gail`,
+      {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": modalApiKey,
-          accept: "application/json",
-        },
-        body: JSON.stringify(campaignData),
-      });
-
-      if (!lulaResponse.ok) {
-        const responseText = await lulaResponse.text();
-        const responseDetails = {
-          status: lulaResponse.status,
-          statusText: lulaResponse.statusText,
-          url: lulaResponse.url,
-          headers: Object.fromEntries(lulaResponse.headers.entries()),
-          bodyText: responseText,
-          bodyLength: responseText ? responseText.length : 0,
-        };
-
-        console.error("=== RESPUESTA COMPLETA DE LULA ===");
-        console.error(JSON.stringify(responseDetails, null, 2));
-        console.error("=== FIN RESPUESTA LULA ===");
-
-        let errorMessage = `Error ${lulaResponse.status}: ${lulaResponse.statusText}`;
-        let errorDetails = null;
-
-        if (responseText && responseText.trim().length > 0) {
-          try {
-            const errorData = JSON.parse(responseText);
-            console.error("Error parseado como JSON:", errorData);
-
-            errorMessage =
-              errorData.message ||
-              errorData.error ||
-              errorData.detail ||
-              errorMessage;
-            errorDetails = errorData;
-
-            if (errorData.details) {
-              console.error("Detalles del error:", errorData.details);
-            }
-            if (errorData.validation_errors) {
-              console.error(
-                "Errores de validación:",
-                errorData.validation_errors
-              );
-            }
-            if (errorData.errors) {
-              console.error("Lista de errores:", errorData.errors);
-            }
-          } catch (parseError) {
-            console.error("No se pudo parsear como JSON:", parseError.message);
-            console.error("Respuesta raw:", responseText);
-          }
-        } else {
-          console.error("Respuesta vacía del servidor");
-          errorMessage = `Error ${lulaResponse.status}: Respuesta vacía del servidor`;
-        }
-
-        throw new Error(errorMessage);
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(backendPayload),
       }
+    );
 
-      const lulaCampaign = await lulaResponse.json();
-      const lulaCampaignId = lulaCampaign.id;
-
-      const key = modalApiKey || apiKeyActiva;
-      const contactsResponse = await fetch(
-        `https://api.lula.com/v1/contact_lists/${selectedContactList}/contacts`,
-        { headers: { "X-API-Key": key, accept: "application/json" } }
-      );
-
-      if (!contactsResponse.ok) {
-        console.warn(
-          "No se pudieron obtener los contactos, continuando sin ellos"
-        );
-      }
-
-      const contactsData = contactsResponse.ok
-        ? await contactsResponse.json()
-        : { data: [] };
-
-      const backendPayload = {
-        idCampana: lulaCampaignId,
-        name: selectedCampaignName,
-        description: newDescripcion || selectedCampaignName,
-        status: "active",
-        timezone: "America/Bogota",
-        pais: modalCountry,
-
-        contactList: {
-          id: contactList.id,
-          name: contactList.name,
-          description: contactList.description || "",
-        },
-        sequence: {
-          id: sequence.id,
-          name: sequence.name,
-          description: sequence.description || "",
-        },
-        redialingRule: {
-          id: redialingRule.id,
-          name: redialingRule.name,
-          outcomes: redialingRule.outcomes || [],
-          systemActions: redialingRule.systemActions || {},
-        },
-        contactos: (contactsData.data || []).map((c) => ({
-          id: c.id,
-          firstName: c.firstName,
-          lastName: c.lastName,
-          businessName: c.businessName,
-          source: c.source,
-          status: c.status,
-          phoneNumbers: c.phoneNumbers,
-          additionalData: c.additionalData,
-        })),
-      };
-
-      console.log(
-        "Payload enviado al backend:",
-        JSON.stringify(backendPayload, null, 2)
-      );
-
-      const backendResponse = await fetch(
-        `${API_URL_GATEWAY}/gateway/campanas/registrar-gail`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(backendPayload),
-        }
-      );
-
-      if (!backendResponse.ok) {
-        const errorText = await backendResponse.text();
-        console.error("Error del backend:", errorText);
-        throw new Error(`Error registrando en base de datos: ${errorText}`);
-      }
-
-      notification.success({
-        message:
-          "Campaña creada en Lula y registrada en base de datos exitosamente",
-      });
-      setLulaCreateModalVisible(false);
-      fetchCampanas();
-    } catch (error) {
-      console.error("Error completo al crear campaña:", error);
-      notification.error({
-        message: `Error al crear campaña: ${error.message}`,
-        description: "Revisa la consola para más detalles",
-      });
-    } finally {
-      setCreatingCampaign(false);
+    if (!backendResponse.ok) {
+      const errorText = await backendResponse.text();
+      throw new Error(`Error registrando en BD: ${errorText}`);
     }
-  };
+
+    notification.success({
+      message: "Campaña creada en Lula y registrada exitosamente",
+    });
+    setLulaCreateModalVisible(false);
+    fetchCampanas();
+  } catch (error) {
+    console.error("Error completo:", error);
+    notification.error({
+      message: `Error al crear campaña: ${error.message}`,
+      description: "Revisa la consola para más detalles",
+    });
+  } finally {
+    setCreatingCampaign(false);
+  }
+};
 
   const renderGailActions = (record) => {
     const estado = record.status.toLowerCase();
@@ -1893,7 +1514,7 @@ const CampanasGail = () => {
       key: "origen",
       ...getColumnSearchProps("origen"),
       render: (origen) => (
-        <Tag color={origen === "Gail" ? "blue" : "green"}>{origen}</Tag>
+        <Tag color={origen === "IA - NATALIA" ? "blue" : "green"}>{origen}</Tag>
       ),
     },
     {
@@ -1920,7 +1541,7 @@ const CampanasGail = () => {
                 />
               </Tooltip>
 
-              <Tooltip title="Crear en Gail">
+              <Tooltip title="Crear">
                 <Button
                   icon={<PlusOutlined />}
                   onClick={() => {
@@ -1933,14 +1554,14 @@ const CampanasGail = () => {
                     setLulaCreateModalVisible(true);
                   }}
                 >
-                  Crear en Gail
+                  Crear en IA - NATALIA
                 </Button>
               </Tooltip>
             </Space>
           );
         }
 
-        if (record.origen === "Gail") {
+        if (record.origen === "IA - NATALIA") {
           return renderGailActions(record);
         }
 
@@ -2010,7 +1631,7 @@ const CampanasGail = () => {
               setSelectedSequence(record.id);
               setSequencesManageModalVisible(false);
               notification.info({
-                message: `Secuencia "${record.name}" seleccionada para la campaña Gail.`,
+                message: `Secuencia "${record.name}" seleccionada para la campaña IA - NATALIA.`,
               });
             }}
           >
@@ -2423,68 +2044,70 @@ const CampanasGail = () => {
       reader.readAsArrayBuffer(file);
     });
 
-  const handleBulkAddContactsToList = async (listId, contactsParam) => {
-    const contacts = contactsParam ?? bulkContacts;
-    if (!contacts?.length) {
-      notification.warning({ message: "No hay contactos cargados." });
-      return;
+const handleBulkAddContactsToList = async (listId, contactsParam) => {
+  if (!paisSeleccionado) return;
+  
+  const contacts = contactsParam ?? bulkContacts;
+  if (!contacts?.length) {
+    notification.warning({ message: "No hay contactos cargados." });
+    return;
+  }
+  
+  try {
+    const payload = contacts.map((contact) => ({
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      businessName: contact.businessName ? String(contact.businessName) : "",
+      emails: contact.emails,
+      phoneNumbers: contact.phoneNumbers,
+      additionalData: contact.additionalData,
+    }));
+
+    const pais = modalCountry || paisSeleccionado;
+    
+    // Crear contactos
+    const createResponse = await fetch(buildLulaUrl(pais, '/contacts/bulk_add'), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    
+    const createdContacts = await createResponse.json();
+
+    if (!createResponse.ok || createdContacts.succeeded === 0) {
+      throw new Error(createdContacts.message || "Error creando contactos.");
     }
-    try {
-      const payload = contacts.map((contact) => ({
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        businessName: contact.businessName ? String(contact.businessName) : "",
-        emails: contact.emails,
-        phoneNumbers: contact.phoneNumbers,
-        additionalData: contact.additionalData,
-      }));
 
-      const key = modalApiKey || apiKeyActiva;
-
-      const createResponse = await fetch(
-        "https://api.lula.com/v1/contacts/bulk_add",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-API-Key": key },
-          body: JSON.stringify(payload),
-        }
-      );
-      const createdContacts = await createResponse.json();
-      if (!createResponse.ok || createdContacts.succeeded === 0) {
-        throw new Error(createdContacts.message || "Error creando contactos.");
+    const createdContactIds = createdContacts.results.map((r) => r.id);
+    
+    // Asociar a lista
+    const associateResponse = await fetch(
+      buildLulaUrl(pais, `/contact_lists/${listId}/add`),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: createdContactIds }),
       }
-
-      const createdContactIds = createdContacts.results.map((r) => r.id);
-      const associateResponse = await fetch(
-        `https://api.lula.com/v1/contact_lists/${listId}/add`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-API-Key": key },
-          body: JSON.stringify({ contactIds: createdContactIds }),
-        }
-      );
-      if (!associateResponse.ok) {
-        const errorText = await associateResponse.text();
-        throw new Error(`Error asociando contactos a la lista: ${errorText}`);
-      }
-
-      notification.success({
-        message: "Contactos creados y asociados exitosamente",
-      });
-      setBulkContacts([]);
-      fetchContactsInList(listId);
-    } catch (error) {
-      console.error("❌ Error en handleBulkAddContactsToList:", error);
-      notification.error({
-        message: error.message || "Error en creación masiva de contactos",
-      });
+    );
+    
+    if (!associateResponse.ok) {
+      const errorText = await associateResponse.text();
+      throw new Error(`Error asociando contactos: ${errorText}`);
     }
-  };
+
+    notification.success({ message: "Contactos creados y asociados exitosamente" });
+    setBulkContacts([]);
+    fetchContactsInList(listId);
+  } catch (error) {
+    console.error("Error en handleBulkAddContactsToList:", error);
+    notification.error({ message: error.message || "Error en creación masiva" });
+  }
+};
 
   const handleDescargarPlantilla = async (nombrePlantilla) => {
     try {
       const response = await fetch(
-        `${API_URL_GATEWAY}/gateway/campanas/descargar_plantilla?nombre=${nombrePlantilla}`
+        `${API_URL_GATEWAY_CONNECT}/gateway/campanas/descargar_plantilla?nombre=${nombrePlantilla}`
       );
       if (!response.ok) throw new Error("Error al descargar plantilla");
       const blob = await response.blob();
@@ -2583,7 +2206,7 @@ const CampanasGail = () => {
           >
             <Select.Option value="todos">Todos</Select.Option>
             <Select.Option value="Aplicativo">Aplicativo</Select.Option>
-            <Select.Option value="Gail">Gail</Select.Option>
+            <Select.Option value="IA - NATALIA">IA - NATALIA</Select.Option>
           </Select>
         </div>
 
@@ -2651,7 +2274,7 @@ const CampanasGail = () => {
       </Modal>
 
       <Modal
-        title="Crear Campaña Gail (Lula)"
+        title="Crear Campaña IA - NATALIA"
         open={lulaCreateModalVisible}
         onOk={handleSaveLulaCampaign}
         onCancel={() => {

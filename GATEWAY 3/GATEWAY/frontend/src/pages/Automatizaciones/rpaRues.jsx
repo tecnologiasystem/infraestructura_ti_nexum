@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { UploadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 import "./rpaRues.css";
 
 const RpaRues = () => {
@@ -43,7 +43,7 @@ const RpaRues = () => {
   const cargarDatosDesdeBD = async () => {
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/rues_api/detalle/listar_agrupadoRues`
+        `${API_URL_GATEWAY_RPA}/gateway/rues_api/detalle/listar_agrupadoRues`
       );
       const { data } = await res.json();
       setExcelData(data);
@@ -58,7 +58,7 @@ const RpaRues = () => {
     // 1) intenta endpoint nuevo de resumen
     try {
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Juridica/automatizacionesRues/${idEncabezado}/resumen`
+        `${API_URL_GATEWAY_RPA}/gateway/Juridica/automatizacionesRues/${idEncabezado}/resumen`
       );
       if (res.ok) {
         return await res.json(); // { procesados, totalRegistros }
@@ -66,7 +66,7 @@ const RpaRues = () => {
     } catch (_) {}
     // 2) fallback: cuenta desde el detalle actual
     const res2 = await fetch(
-      `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleRues?id_encabezado=${idEncabezado}`
+      `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleRues?id_encabezado=${idEncabezado}`
     );
     const data = await res2.json();
     const procesados = (data.detalles || []).filter(
@@ -94,7 +94,7 @@ const RpaRues = () => {
       const offset = (page - 1) * pageSize;
       // 1) intenta endpoint paginado (retrocompat si vuelve array)
       const res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesRues?offset=${offset}&limit=${pageSize}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesRues?offset=${offset}&limit=${pageSize}`
       );
       const data = await res.json();
 
@@ -144,7 +144,7 @@ const RpaRues = () => {
       if (procesados === totalRegistros && totalRegistros > 0) {
         try {
           const resp = await fetch(
-            `${API_URL_GATEWAY}/gateway/notificarFinalizacionRues`,
+            `${API_URL_GATEWAY_RPA}/gateway/notificarFinalizacionRues`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -181,7 +181,7 @@ const RpaRues = () => {
     try {
       // 1) intenta endpoint paginado “nuevo”
       const url = new URL(
-        `${API_URL_GATEWAY}/gateway/Jurica/automatizacionesRues/${idEncabezado}/detalles`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/automatizacionesRues/${idEncabezado}/detalles`
       );
       url.searchParams.set("offset", offset);
       url.searchParams.set("limit", pageSize);
@@ -205,7 +205,7 @@ const RpaRues = () => {
 
       // 2) fallback: endpoint actual (todo) + filtrar/paginar en front
       res = await fetch(
-        `${API_URL_GATEWAY}/gateway/Jurica/listarAutomatizacionesDetalleRues?id_encabezado=${idEncabezado}`
+        `${API_URL_GATEWAY_RPA}/gateway/Jurica/listarAutomatizacionesDetalleRues?id_encabezado=${idEncabezado}`
       );
       const full = await res.json(); // { detalles: [...] }
 
@@ -255,7 +255,7 @@ const RpaRues = () => {
 
   // --- pausa / reanudar ---
   const handlePause = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/rues_api/pausar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/rues_api/pausar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(id);
@@ -264,7 +264,7 @@ const RpaRues = () => {
   };
 
   const handleResume = async (id) => {
-    await fetch(`${API_URL_GATEWAY}/gateway/rues_api/reanudar/${id}`, {
+    await fetch(`${API_URL_GATEWAY_RPA}/gateway/rues_api/reanudar/${id}`, {
       method: "POST",
     });
     setPausedEncabezado(null);
@@ -296,7 +296,7 @@ const RpaRues = () => {
             <Button
               className="rpa-btn-primary"
               onClick={() =>
-                window.open(`${API_URL_GATEWAY}/gateway/excel/plantillaRues`)
+                window.open(`${API_URL_GATEWAY_RPA}/gateway/excel/plantillaRues`)
               }
             >
               Descargar plantilla
@@ -312,7 +312,7 @@ const RpaRues = () => {
                   formData.append("idUsuario", myId);
 
                   const res = await fetch(
-                    `${API_URL_GATEWAY}/gateway/excel/guardarRues`,
+                    `${API_URL_GATEWAY_RPA}/gateway/excel/guardarRues`,
                     {
                       method: "POST",
                       body: formData,
@@ -524,7 +524,7 @@ const RpaRues = () => {
               className="rpa-btn-primary"
               onClick={() => {
                 window.open(
-                  `${API_URL_GATEWAY}/gateway/excel/exportar_resultadosRues?id_encabezado=${detalleAutomatizacion.idEncabezado}`
+                  `${API_URL_GATEWAY_RPA}/gateway/excel/exportar_resultadosRues?id_encabezado=${detalleAutomatizacion.idEncabezado}`
                 );
               }}
             >

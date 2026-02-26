@@ -9,7 +9,7 @@ import data from "@emoji-mart/data";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-import { API_URL_GATEWAY } from "../../config";
+import { API_URL_GATEWAY_RPA } from "../../config";
 
 const TEMPLATES = [
   { key: "none", name: "Seleccionar plantilla...", html: "" },
@@ -514,7 +514,7 @@ export default function MensajesWhatsapp() {
         }
 
         const { data } = await axios.post(
-          `${API_URL_GATEWAY}/gateway-rpa/MensajeWhatsApp/registrar`,
+          `${API_URL_GATEWAY_RPA}/gateway-rpa/MensajeWhatsApp/registrar`,
           fd
         );
 

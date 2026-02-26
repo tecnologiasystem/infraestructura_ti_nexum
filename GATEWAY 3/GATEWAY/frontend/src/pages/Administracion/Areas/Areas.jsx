@@ -16,7 +16,7 @@ import {
   SaveOutlined,
   CloseOutlined
 } from "@ant-design/icons";
-import { API_URL_GATEWAY } from "../../../config";
+import { API_URL_GATEWAY_CONNECT } from "../../../config";
 import "./Areas.css";
 
 const Areas = () => {
@@ -37,7 +37,7 @@ const Areas = () => {
 
     const currentPath = location.pathname;
 
-    fetch(`${API_URL_GATEWAY}/gateway/porRol?idRol=${idRol}`)
+    fetch(`${API_URL_GATEWAY_CONNECT}/gateway/porRol?idRol=${idRol}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -60,7 +60,7 @@ const Areas = () => {
   const fetchAreas = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL_GATEWAY}/gateway/areas/dar`);
+      const response = await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/dar`);
       const areas = await response.json();
       if (Array.isArray(areas.areas)) {
         setData(areas.areas);
@@ -95,14 +95,14 @@ const Areas = () => {
   const handleSave = async () => {
     try {
       if (newRecord) {
-        await fetch(`${API_URL_GATEWAY}/gateway/areas/crear`, {
+        await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/crear`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nombreArea: newNombre }),
         });
         notification.success({ message: "Área creada exitosamente" });
       } else if (editingRecord) {
-        await fetch(`${API_URL_GATEWAY}/gateway/areas/editar`, {
+        await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/editar`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idArea: editingRecord.idArea, nombreArea: editingNombre }),
@@ -129,7 +129,7 @@ const Areas = () => {
 
   const handleDelete = async (idArea) => {
     try {
-      await fetch(`${API_URL_GATEWAY}/gateway/areas/eliminar`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/eliminar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idArea }),
@@ -144,7 +144,7 @@ const Areas = () => {
 
   const handleActivate = async (idArea) => {
     try {
-      await fetch(`${API_URL_GATEWAY}/gateway/areas/activar`, {
+      await fetch(`${API_URL_GATEWAY_CONNECT}/gateway/areas/activar`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idArea }),
