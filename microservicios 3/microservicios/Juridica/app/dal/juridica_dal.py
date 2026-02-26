@@ -112,21 +112,27 @@ def obtener_CC_aConsultar():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT e.idEncabezado,
-    CAST(d.CC AS VARCHAR(50)) AS cedula
-    FROM SuperNotariadoEncabezado e
-    JOIN SuperNotariadoDetalle d ON e.idEncabezado = d.idEncabezado
+    ;WITH EncPendiente AS (
+    SELECT TOP 1 e.idEncabezado, e.idUsuario
+    FROM NEXUM.dbo.SuperNotariadoEncabezado e
+    JOIN NEXUM.dbo.SuperNotariadoDetalle d
+        ON e.idEncabezado = d.idEncabezado
     WHERE (d.matricula = '' OR d.matricula IS NULL)
-      AND e.idEncabezado = (
-          SELECT TOP 1 e2.idEncabezado
-          FROM SuperNotariadoEncabezado e2
-          JOIN SuperNotariadoDetalle d2 ON e2.idEncabezado = d2.idEncabezado
-          WHERE d2.matricula = '' OR d2.matricula IS NULL
-          ORDER BY e2.idEncabezado ASC
-      )
-    ORDER BY NEWID()
-""")
+    ORDER BY e.idEncabezado ASC
+)
+SELECT  
+    e.idEncabezado,
+    CAST(d.CC AS VARCHAR(50)) AS cedula,
+    u.correo
+FROM EncPendiente e
+JOIN NEXUM.dbo.SuperNotariadoDetalle d
+    ON d.idEncabezado = e.idEncabezado
+LEFT JOIN NEXUM.dbo.UsuariosApp u
+    ON u.idUsuarioApp = e.idUsuario
+WHERE (d.matricula = '' OR d.matricula IS NULL)
+ORDER BY NEWID();
 
+""")
         return cursor.fetchall(), None
     except Exception as e:
         import traceback
@@ -400,21 +406,24 @@ def obtener_CC_aConsultarRunt():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT
-    e.idEncabezado,
-    CAST(d.cedula AS VARCHAR(50)) AS cedula
-FROM RuntEncabezado e
-JOIN RuntDetalle d ON e.idEncabezado = d.idEncabezado
-WHERE (d.placaVehiculo = '' OR d.placaVehiculo IS NULL)
-AND NOT EXISTS (
-    SELECT 1
-    FROM RuntDetalle d2
-    WHERE d2.cedula = d.cedula
-    AND d2.placaVehiculo IS NOT NULL
-    AND d2.placaVehiculo <> ''
-)
-ORDER BY NEWID()
-
+        SELECT
+            e.idEncabezado,
+            CAST(d.cedula AS VARCHAR(50)) AS cedula,
+            u.correo
+        FROM NEXUM.dbo.RuntEncabezado e
+        JOIN NEXUM.dbo.RuntDetalle d
+            ON e.idEncabezado = d.idEncabezado
+        LEFT JOIN NEXUM.dbo.UsuariosApp u
+            ON u.idUsuarioApp = e.idUsuario
+        WHERE (d.placaVehiculo = '' OR d.placaVehiculo IS NULL)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM NEXUM.dbo.RuntDetalle d2
+            WHERE d2.cedula = d.cedula
+                AND d2.placaVehiculo IS NOT NULL
+                AND d2.placaVehiculo <> ''
+        )
+        ORDER BY NEWID();
 """)
 
         return cursor.fetchall(), None
@@ -724,19 +733,26 @@ def obtener_CC_aConsultarRues():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT e.idEncabezado,
-    CAST(d.cedula AS VARCHAR(50)) AS cedula
-    FROM RuesEncabezado e
-    JOIN RuesDetalle d ON e.idEncabezado = d.idEncabezado
-    WHERE (d.numeroMatricula = '' OR d.numeroMatricula IS NULL)
-      AND e.idEncabezado = (
-          SELECT TOP 1 e2.idEncabezado
-          FROM RuesEncabezado e2
-          JOIN RuesDetalle d2 ON e2.idEncabezado = d2.idEncabezado
-          WHERE d2.numeroMatricula = '' OR d2.numeroMatricula IS NULL
-          ORDER BY e2.idEncabezado ASC
-      )
-    ORDER BY NEWID()
+        ;WITH EncPendiente AS (
+            SELECT TOP 1 e.idEncabezado, e.idUsuario
+            FROM NEXUM.dbo.RuesEncabezado e
+            JOIN NEXUM.dbo.RuesDetalle d
+                ON e.idEncabezado = d.idEncabezado
+            WHERE (d.numeroMatricula = '' OR d.numeroMatricula IS NULL)
+            ORDER BY e.idEncabezado ASC
+        )
+        SELECT  
+            e.idEncabezado,
+            CAST(d.cedula AS VARCHAR(50)) AS cedula,
+            u.correo
+        FROM EncPendiente e
+        JOIN NEXUM.dbo.RuesDetalle d
+            ON d.idEncabezado = e.idEncabezado
+        LEFT JOIN NEXUM.dbo.UsuariosApp u
+            ON u.idUsuarioApp = e.idUsuario
+        WHERE (d.numeroMatricula = '' OR d.numeroMatricula IS NULL)
+        ORDER BY NEWID();
+
 """)
 
         return cursor.fetchall(), None
@@ -1005,18 +1021,26 @@ def obtener_CC_aConsultarSimit():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT e.idEncabezado, CAST(d.cedula AS VARCHAR(50)) AS cedula
-    FROM SimitEncabezado e
-    JOIN SimitDetalle d ON e.idEncabezado = d.idEncabezado
+    ;WITH EncPendiente AS (
+        SELECT TOP 1 e.idEncabezado, e.idUsuario
+        FROM NEXUM.dbo.SimitEncabezado e
+        JOIN NEXUM.dbo.SimitDetalle d
+            ON e.idEncabezado = d.idEncabezado
+        WHERE (d.secretaria = '' OR d.secretaria IS NULL)
+        ORDER BY e.idEncabezado ASC
+    )
+    SELECT  
+        e.idEncabezado,
+        CAST(d.cedula AS VARCHAR(50)) AS cedula,
+        u.correo
+    FROM EncPendiente e
+    JOIN NEXUM.dbo.SimitDetalle d
+        ON d.idEncabezado = e.idEncabezado
+    LEFT JOIN NEXUM.dbo.UsuariosApp u
+        ON u.idUsuarioApp = e.idUsuario
     WHERE (d.secretaria = '' OR d.secretaria IS NULL)
-      AND e.idEncabezado = (
-          SELECT TOP 1 e2.idEncabezado
-          FROM SimitEncabezado e2
-          JOIN SimitDetalle d2 ON e2.idEncabezado = d2.idEncabezado
-          WHERE d2.secretaria = '' OR d2.secretaria IS NULL
-          ORDER BY e2.idEncabezado ASC
-      )
-    ORDER BY NEWID()
+    ORDER BY NEWID();
+
 """)
 
         return cursor.fetchall(), None
@@ -1252,16 +1276,27 @@ def obtener_Radicado_aConsultarVigilancia():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-        SELECT TOP 1 
-            e.idEncabezado,
-            CONVERT(VARCHAR(10), d.fechaInicial, 120) AS fechaInicial,
-            CONVERT(VARCHAR(10), d.fechaFinal, 120) AS fechaFinal,
-            CAST(d.radicado AS VARCHAR(100)) AS radicado
-        FROM VigilanciaEncabezado e
-        JOIN VigilanciaDetalle d ON e.idEncabezado = d.idEncabezado
+        ;WITH EncPendiente AS (
+        SELECT TOP 1 e.idEncabezado, e.idUsuario
+        FROM NEXUM.dbo.VigilanciaEncabezado e
+        JOIN NEXUM.dbo.VigilanciaDetalle d
+            ON e.idEncabezado = d.idEncabezado
         WHERE (d.actuacion = '' OR d.actuacion IS NULL)
-        ORDER BY NEWID()
-
+        ORDER BY e.idEncabezado ASC
+    )
+    SELECT TOP 1
+        e.idEncabezado,
+        CONVERT(VARCHAR(10), d.fechaInicial, 120) AS fechaInicial,
+        CONVERT(VARCHAR(10), d.fechaFinal, 120) AS fechaFinal,
+        CAST(d.radicado AS VARCHAR(100)) AS radicado,
+        u.correo
+    FROM EncPendiente e
+    JOIN NEXUM.dbo.VigilanciaDetalle d
+        ON d.idEncabezado = e.idEncabezado
+    LEFT JOIN NEXUM.dbo.UsuariosApp u
+        ON u.idUsuarioApp = e.idUsuario
+    WHERE (d.actuacion = '' OR d.actuacion IS NULL)
+    ORDER BY NEWID();
             """)
         return cursor.fetchall(), None
     except Exception as e:
@@ -1514,11 +1549,23 @@ def obtener_CC_aConsultarCamaraComercio():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT
+    ;WITH EncPendiente AS (
+    SELECT TOP 1 e.idEncabezado, e.idUsuario
+    FROM NEXUM.dbo.CamaraComercioEncabezado e
+    JOIN NEXUM.dbo.CamaraComercioDetalle d
+        ON e.idEncabezado = d.idEncabezado
+    WHERE (d.identificacion = '' OR d.identificacion IS NULL)
+    ORDER BY e.idEncabezado ASC
+)
+SELECT
     e.idEncabezado,
-    CAST(d.cedula AS VARCHAR(50)) AS cedula
-FROM CamaraComercioEncabezado e
-JOIN CamaraComercioDetalle d ON e.idEncabezado = d.idEncabezado
+    CAST(d.cedula AS VARCHAR(50)) AS cedula,
+    u.correo
+FROM EncPendiente e
+JOIN NEXUM.dbo.CamaraComercioDetalle d
+    ON d.idEncabezado = e.idEncabezado
+LEFT JOIN NEXUM.dbo.UsuariosApp u
+    ON u.idUsuarioApp = e.idUsuario
 WHERE (d.identificacion = '' OR d.identificacion IS NULL)
 ORDER BY NEWID()
 """)
@@ -2211,21 +2258,24 @@ def obtener_CC_aConsultarTyba():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-    SELECT
+SELECT
     e.idEncabezado,
-    CAST(d.cedula AS VARCHAR(50)) AS cedula
-FROM TybaEncabezado e
-JOIN TybaDetalle d ON e.idEncabezado = d.idEncabezado
+    CAST(d.cedula AS VARCHAR(50)) AS cedula,
+    u.correo
+FROM NEXUM.dbo.TybaEncabezado e
+JOIN NEXUM.dbo.TybaDetalle d
+    ON e.idEncabezado = d.idEncabezado
+LEFT JOIN NEXUM.dbo.UsuariosApp u
+    ON u.idUsuarioApp = e.idUsuario
 WHERE (d.radicado = '' OR d.radicado IS NULL)
-AND NOT EXISTS (
-    SELECT 1
-    FROM TybaDetalle d2
-    WHERE d2.cedula = d.cedula
-    AND d2.radicado IS NOT NULL
-    AND d2.radicado <> ''
-)
-ORDER BY NEWID()
-
+  AND NOT EXISTS (
+      SELECT 1
+      FROM NEXUM.dbo.TybaDetalle d2
+      WHERE d2.cedula = d.cedula
+        AND d2.radicado IS NOT NULL
+        AND d2.radicado <> ''
+  )
+ORDER BY NEWID();
 """)
 
         return cursor.fetchall(), None

@@ -11,6 +11,8 @@ Retorna: objeto de conexión pyodbc.Connection para ejecutar consultas en la bas
 
 import pyodbc
 
+pyodbc.pooling = True
+
 def get_connection():
     conn = pyodbc.connect(
         "DRIVER={ODBC Driver 17 for SQL Server};"

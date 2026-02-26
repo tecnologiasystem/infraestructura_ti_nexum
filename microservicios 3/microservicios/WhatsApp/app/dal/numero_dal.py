@@ -97,21 +97,21 @@ def obtener_numero_aConsultarWhatsApp():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT 
+           SELECT 
               e.idEncabezado,
               d.indicativo,
               CAST(d.numero AS VARCHAR(50)) AS numero
-            FROM WhatsAppEncabezado e
-            JOIN WhatsAppDetalle d ON e.idEncabezado = d.idEncabezado
+            FROM WhatsAppEncabezado e WITH (NOLOCK)
+            JOIN WhatsAppDetalle d WITH (NOLOCK) ON e.idEncabezado = d.idEncabezado
             WHERE (d.tiene_whatsApp = '' OR d.tiene_whatsApp IS NULL)
               AND e.idEncabezado = (
                   SELECT TOP 1 e2.idEncabezado
-                  FROM WhatsAppEncabezado e2
-                  JOIN WhatsAppDetalle d2 ON e2.idEncabezado = d2.idEncabezado
+                  FROM WhatsAppEncabezado e2 WITH (NOLOCK)
+                  JOIN WhatsAppDetalle d2 WITH (NOLOCK) ON e2.idEncabezado = d2.idEncabezado
                   WHERE d2.tiene_whatsApp = '' OR d2.tiene_whatsApp IS NULL
                   ORDER BY e2.idEncabezado ASC
               )
-            ORDER BY d.idDetalle ASC
+            ORDER BY NEWID();
         """)
         return cursor.fetchall(), None
     except Exception as e:
@@ -497,4 +497,42 @@ def reanudar_detalle_encabezado(id_encabezado: int) -> bool:
         return False
     finally:
         cur.close()
+        conn.close()
+
+def obtener_detalles_pendientes_por_encabezado(id_encabezado: int):
+    """
+    Obtiene todos los detalles pendientes (sin procesar) de un encabezado específico.
+    """
+    conn = get_connection()
+    if conn is None:
+        return []
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                idDetalle,
+                indicativo,
+                numero
+            FROM WhatsAppDetalle
+            WHERE idEncabezado = ?
+            AND (tiene_whatsApp IS NULL OR tiene_whatsApp = '')
+            ORDER BY idDetalle
+        """, id_encabezado)
+        
+        rows = cursor.fetchall()
+        return [
+            {
+                "idDetalle": row.idDetalle,
+                "indicativo": row.indicativo or "",
+                "numero": row.numero or ""
+            }
+            for row in rows
+        ]
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return []
+    finally:
+        cursor.close()
         conn.close()

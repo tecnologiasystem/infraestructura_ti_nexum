@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
-from app.Vigilancia.dal.vigilancia_dal import insertar_encabezado, insertar_detalle, EncabezadoModel, insertar_detalle_resultadoVigilancia, obtener_correo_usuarioVigilancia, correo_ya_enviado, obtener_idUsuario_por_encabezado, marcar_correo_enviado, pausar_detalle_encabezado, reanudar_detalle_encabezado, quitar_pausa_encabezado, marcar_pausa_encabezado
+from app.Vigilancia.dal.vigilancia_dal import insertar_encabezado, insertar_detalle, EncabezadoModel, insertar_detalle_resultadoVigilancia, obtener_correo_usuarioVigilancia, correo_ya_enviado, obtener_idUsuario_por_encabezado, marcar_correo_enviado, pausar_detalle_encabezado, reanudar_detalle_encabezado, quitar_pausa_encabezado, marcar_pausa_encabezado, obtener_correo_notificacion
 import pandas as pd
 import smtplib
 from email.mime.text import MIMEText
@@ -102,3 +102,16 @@ def reanudar_encabezado(id_encabezado: int) -> bool:
     ok1 = quitar_pausa_encabezado(id_encabezado)
     ok2 = reanudar_detalle_encabezado(id_encabezado)
     return ok1 and ok2
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+def obtener_correoNotificacion():
+    """
+    Retorna la siguiente tupla (radicado, fechaInicial, fechaFinal) pendiente.
+    Lanza excepción si hay un error, o devuelve None si no hay más radicados.
+    """
+    filas, error = obtener_correo_notificacion()
+    if error:
+        raise Exception(f"Error al consultar próximo radicado: {error}")
+    if not filas:
+        return None
+    return filas[0]

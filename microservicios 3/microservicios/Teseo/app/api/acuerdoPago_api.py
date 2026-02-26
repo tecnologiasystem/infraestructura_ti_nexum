@@ -8,7 +8,7 @@ from typing import Optional
 
 router = APIRouter()
 
-SAVE_DIR = Path(r"\\BITMXL94920DQ\Uipat Datos\Acuerdo Pago")
+SAVE_DIR = Path(r"\\172.18.73.76\Uipat Datos\Acuerdo Pago")
 
 @router.post("/excel/guardarAcuerdo")
 async def guardar_acuerdos_excel(file: UploadFile = File(...)):
@@ -41,7 +41,7 @@ async def guardar_acuerdos_excel(file: UploadFile = File(...)):
                 name = name.replace(ch, "_")
             return name.strip() or "SIN_DNI"
 
-        out_name = f"{_sanitize(dni)}.xlsx"
+        out_name = f"{_sanitize(dni)}.xlsx" #GESTION_123456789
         out_path = SAVE_DIR / out_name
 
         # 5) Guardar bytes tal cual
@@ -85,7 +85,7 @@ async def obtener_y_marcar_dni(
 @router.post("/acuerdos/marcar-enviada", tags=["Acuerdo Pago"])
 async def acuerdos_marcar_enviada_y_devolver(
     solo_activos: bool = Query(default=True),
-    exige_estado: Optional[str] = Query(default="ACTIVO"),
+    exige_estado: Optional[str] = Query(default="PENDIENTE"),
 ):
     """
     Pop atómico: marca enviada=1 en 1 registro pendiente y

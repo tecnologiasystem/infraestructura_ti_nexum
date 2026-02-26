@@ -20,9 +20,12 @@ import zipfile
 from dotenv import load_dotenv
 import ssl
 import time
-from smtplib import SMTPServerDisconnected
+from smtplib import SMTPServerDisconnected, SMTPResponseException
 from email.mime.image import MIMEImage
-from app.dal.Email_dal import crear_encabezado, registrar_detalle, actualizar_estado_detalle, finalizar_encabezado_si_completo
+from app.dal.Email_dal import crear_encabezado, registrar_detalle, actualizar_estado_detalle, finalizar_encabezado_si_completo, obtener_correo_usuario, actualizar_estado_encabezado, obtener_estado_encabezado, cancelar_pendientes_por_encabezado, listar_pendientes_por_encabezado, contar_enviados_hoy_por_remitente, marcar_fecha_envio_si_falta
+from datetime import datetime, time as dtime
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 MEMBRETE_HTML_PATH = r"D:\microservicios\CorreosMasivos\app\utils\membrete_email.html"
 FOOTER_HTML_PATH   = r"D:\microservicios\CorreosMasivos\app\utils\footer_email.html"
@@ -31,6 +34,12 @@ FOOTER_HTML_PATH   = r"D:\microservicios\CorreosMasivos\app\utils\footer_email.h
 RATE_BLOCK_SIZE = 200          # Nº de correos que se envían antes de descansar
 RATE_BLOCK_SLEEP = 900         # Descanso entre bloques (segundos) → 900 = 15 min
 SLEEP_BETWEEN_MSGS = 0.5       # Micro-pausa por mensaje (0.2–0.5 si te conviene)
+
+MAX_DAILY_PER_ACCOUNT = 600 # LIMITE DIARIO POR CUENTA
+SEND_START = dtime(7, 0)  # EMPEZAR A LAS 07:00 AM RESTANTES
+
+def _after_send_start() -> bool:
+    return datetime.now().time() >= SEND_START
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ENV & LOGGING
@@ -48,6 +57,46 @@ ADJ_PREFIX = "adjunto"
 
 _MEMBRETE_HTML_CACHE = None
 _FOOTER_HTML_CACHE = None
+
+def _notify_uploader_simple(server, from_addr: str, to_addr: str, descripcion: str):
+    """
+    Envía un aviso simple al finalizar: muestra la descripción y la hora de finalización.
+    Usa la sesión SMTP ya abierta (server) y el remitente autenticado (from_addr).
+    """
+    try:
+        if not (server and from_addr and to_addr):
+            return
+        hora_fin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        msg = MIMEMultipart("alternative")
+        msg["From"] = from_addr
+        msg["To"] = to_addr
+        msg["Subject"] = Header("Proceso finalizado", "utf-8")
+
+        body_txt = (
+            f"Hola,\n\n"
+            f"Tu carga con la descripción:\n"
+            f"  \"{descripcion}\"\n\n"
+            f"ha finalizado correctamente a las {hora_fin}.\n\n"
+            f"Este es un mensaje automático."
+        )
+        body_html = (
+            f"<p>Hola,</p>"
+            f"<p>Tu carga con la descripción:</p>"
+            f"<blockquote>{descripcion}</blockquote>"
+            f"<p>ha finalizado correctamente a las <b>{hora_fin}</b>.</p>"
+            f"<p><i>Este es un mensaje automático.</i></p>"
+        )
+
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(body_txt, "plain", "utf-8"))
+        alt.attach(MIMEText(body_html, "html", "utf-8"))
+        msg.attach(alt)
+
+        server.sendmail(from_addr, [to_addr], msg.as_string())
+        logging.getLogger("email_sender").info(f"✅ Notificación final enviada a {to_addr}")
+    except Exception as e:
+        logging.getLogger("email_sender").warning(f"❌ No se pudo notificar al finalizar ({to_addr}): {e}")
 
 def _load_file_cached(path, cache_name):
     try:
@@ -69,7 +118,6 @@ def _load_footer_html():
         _FOOTER_HTML_CACHE = _load_file_cached(FOOTER_HTML_PATH, "footer_html")
     return _FOOTER_HTML_CACHE
 
-
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", str(s or "")).strip()
 
@@ -77,6 +125,16 @@ def _lower_no_accents(s: str) -> str:
     s = _norm(s).lower()
     tr = str.maketrans("áéíóúäëïöüàèìòùñ", "aeiouaeiouaeioun")
     return s.translate(tr)
+
+def _pick_col_value(row_dict: dict, candidates: set[str]) -> str:
+    # candidates: {"cedula","cédula","identificacion","documento", ...}
+    norm_keys = { _lower_no_accents(k): k for k in row_dict.keys() }
+    for c in candidates:
+        nk = _lower_no_accents(c)
+        if nk in norm_keys:
+            val = row_dict.get(norm_keys[nk])
+            return "" if val is None else str(val).strip()
+    return ""
 
 def _split_adj_list(s: str) -> List[str]:
     if not s:
@@ -114,7 +172,7 @@ def _inline_images_cid_on_msg(msg, html: str, base_dir: str) -> str:
                 img = MIMEImage(raw, _subtype=subtype, name=filename)
                 img.add_header("Content-ID", f"<{cid}>")
                 img.add_header("Content-Disposition", "inline", filename=filename)
-                
+                img.add_header("X-Attachment-Id", cid)
                 msg.attach(img)
                 out = out.replace(src, f"cid:{cid}")
                 logger.info(f"✅ Imagen data URI embebida con CID: {cid}")
@@ -149,14 +207,12 @@ def _inline_images_cid_on_msg(msg, html: str, base_dir: str) -> str:
             img = MIMEImage(img_data, _subtype=subtype, name=filename)
             img.add_header("Content-ID", f"<{cid}>")
             img.add_header("Content-Disposition", "inline", filename=filename)
-            
+            img.add_header("X-Attachment-Id", cid)
             msg.attach(img)
             out = out.replace(src, f"cid:{cid}")
-            logger.info(f"✅ Imagen embebida con CID: {cid} desde {p}")
         except Exception as e:
             logger.error(f"Error embebiendo imagen {p}: {e}")
             continue
-
     return out
 
 
@@ -243,7 +299,6 @@ def resolve_excel_path(excel_file_name: str) -> str:
 
     # 1) Ruta absoluta
     if os.path.isabs(excel_file_name) and os.path.isfile(excel_file_name):
-        logger.info(f"📄 Excel absoluto encontrado: {excel_file_name}")
         return excel_file_name
 
     bases: List[str] = []
@@ -262,7 +317,6 @@ def resolve_excel_path(excel_file_name: str) -> str:
             continue
         candidates.append(p)
         if os.path.isfile(p):
-            logger.info(f"📄 Excel encontrado: {p}")
             return p
 
     logger.error(
@@ -290,7 +344,6 @@ def resolve_attachments_paths(names: List[str]) -> List[str]:
         except TypeError:
             continue
         out.append(p)
-    logger.info(f"📎 Adjuntos comunes resueltos: {out}")
     return out
 
 def find_recipient_column(df: pd.DataFrame) -> str:
@@ -349,21 +402,6 @@ def detect_is_html(body: str) -> bool:
     if not body:
         return False
     return "<" in body and ">" in body and "</" in body
-
-MEMBRETE_HTML_CACHE = None
-
-def _load_membrete_html():
-    """Carga el membrete desde la ruta absoluta y lo cachea en memoria."""
-    global MEMBRETE_HTML_CACHE
-    if MEMBRETE_HTML_CACHE is not None:
-        return MEMBRETE_HTML_CACHE
-    try:
-        with open(MEMBRETE_HTML_PATH, "r", encoding="utf-8") as f:
-            MEMBRETE_HTML_CACHE = f.read()
-    except Exception as e:
-        logger.warning(f"No se pudo cargar el membrete HTML en {MEMBRETE_HTML_PATH}: {e}")
-        MEMBRETE_HTML_CACHE = ""
-    return MEMBRETE_HTML_CACHE
 
 def _compose_body_with_membrete(raw_body: str, row: Dict) -> tuple[str, bool]:
     membrete_html = _load_membrete_html()
@@ -468,8 +506,34 @@ def _mk_smtp(smtp_server, smtp_port, email_user, email_password, timeout=120):
     ctx = ssl.create_default_context()
     srv.starttls(context=ctx)
     srv.ehlo()
+    print("====== SMTP LOGIN DEBUG ======")
+    print("SMTP host     :", smtp_server)
+    print("SMTP port     :", smtp_port)
+    print("SMTP user     :", email_user)
+    print("SMTP password :", email_password)
+    print("================================")
+
     srv.login(email_user, email_password)
     return srv
+
+def _send_final_notification(email_user, email_password, to_addr, descripcion):
+    try:
+        smtp_server = os.getenv("SERVER", "smtp.office365.com")
+        smtp_port = int(os.getenv("PORT", "587"))
+
+        server = _mk_smtp(smtp_server, smtp_port, email_user, email_password, timeout=60)
+
+        _notify_uploader_simple(
+            server=server,
+            from_addr=email_user,
+            to_addr=to_addr,
+            descripcion=descripcion
+        )
+
+        _smtp_safe_quit(server)
+    except Exception as e:
+        logger.warning(f"❌ No se pudo notificar al finalizar ({to_addr}): {e}")
+
 
 def _smtp_safe_quit(server):
     try:
@@ -490,33 +554,101 @@ def _send_with_retry(server, mk_server, msg, recipient, envelope_from, logger=No
     tries = 0
     while True:
         try:
-            # Devuelve {} si todo OK; si hay errores por RCPT, vienen aquí.
-            result = server.sendmail(envelope_from, [recipient], msg.as_string())
+            result = server.sendmail(
+                envelope_from,
+                [recipient],
+                msg.as_bytes()   
+            )   
+
             if result:
                 if logger:
                     logger.error(f"SMTP RCPT error for {recipient}: {result}")
                 return server, False, f"RCPT refused: {result}"
             return server, True, None
+
         except SMTPServerDisconnected as e:
             tries += 1
             if logger:
                 logger.warning(f"Conexión SMTP cerrada al enviar a {recipient}. Reintento {tries}/{per_recipient_tries}…")
             if tries >= per_recipient_tries:
                 return server, False, f"SMTP desconectado: {e}"
-            try:
-                _smtp_safe_quit(server)
-                server = mk_server()
-            except Exception as re:
-                return server, False, f"No se pudo reconectar SMTP: {re}"
-        except Exception as e:
+            _smtp_safe_quit(server)
+            server = mk_server()
+
+        except SMTPResponseException as e:
+            # 👇 clave: si el server queda "descuadrado", resetea o reconecta
+            code = getattr(e, "smtp_code", None)
+            tries += 1
+
+            if logger:
+                logger.warning(f"SMTPResponseException {code} para {recipient}: {e}")
+
+            # 503 5.5.1 = secuencia mala -> RSET o reconectar
+            if code == 503:
+                try:
+                    server.rset()  # resetea estado de transacción
+                except Exception:
+                    _smtp_safe_quit(server)
+                    server = mk_server()
+
+                if tries < per_recipient_tries:
+                    continue
+                return server, False, f"{code} Bad sequence: {e}"
+
+            # Para otros códigos: no siempre conviene reconectar
             return server, False, str(e)
+
+        except Exception as e:
+            # si es error raro, mejor reconectar una vez
+            tries += 1
+            if tries < per_recipient_tries:
+                try:
+                    _smtp_safe_quit(server)
+                    server = mk_server()
+                    continue
+                except Exception:
+                    pass
+            return server, False, str(e)
+        
+# RESPETA EL FORMATO MONEDA
+def leer_excel_respetando_formato(path):
+    wb = load_workbook(path, data_only=True)
+    ws = wb.active
+
+    rows = []
+    headers = [c.value for c in ws[1]]
+
+    for row in ws.iter_rows(min_row=2, values_only=False):
+        row_dict = {}
+        for idx, cell in enumerate(row):
+            col_name = headers[idx]
+            value = cell.value
+
+            if isinstance(value, (int, float)):
+                number_format = (cell.number_format or "").lower()
+
+                # FORMATO SOLO SI ES MONEDA
+                if "$" in number_format or "[$" in number_format:
+                    # Redondear
+                    entero = int(round(value))
+                    txt = f"{entero:,.0f}"
+                    txt = txt.replace(",", ".")
+                    value = f"$ {txt}"
+                else:
+                    # Si NO es moneda lo dejo TAL CUAL
+                    value = str(value).replace(".0", "")
+
+            row_dict[col_name] = value
+
+        rows.append(row_dict)
+
+    return rows
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CORE
 # ─────────────────────────────────────────────────────────────────────────────
 def enviar_correos_masivos(data: dict):
-    logger.info("Iniciando envío de correos (BLL, sin BD).")
-
     # Payload
     subject_tmpl = _norm(data.get("subject"))
     body_tmpl = data.get("body") or ""
@@ -534,8 +666,6 @@ def enviar_correos_masivos(data: dict):
 
     # Excel
     excel_path = resolve_excel_path(excel_name)
-    logger.info(f"📄 Excel path resuelto: {excel_path}")
-    logger.info(f"ENV.EMAIL_MASIVO_DIR={os.getenv('EMAIL_MASIVO_DIR')}  ENV.EMAIL_ATTACH_DIR={os.getenv('EMAIL_ATTACH_DIR')}")
     if not os.path.isfile(excel_path):
         detail = {
             "resolved_path": excel_path,
@@ -548,7 +678,9 @@ def enviar_correos_masivos(data: dict):
         return JSONResponse({"error": "No existe el Excel", "detail": detail}, status_code=404)
 
     try:
-        df = pd.read_excel(excel_path)
+        rows = leer_excel_respetando_formato(excel_path)
+        df = pd.DataFrame(rows)
+
         logger.info(f"✅ Excel leído: filas={len(df)} columnas={list(df.columns)}")
     except Exception as e:
         tb = traceback.format_exc()
@@ -563,14 +695,51 @@ def enviar_correos_masivos(data: dict):
     total_registros = len(df)
     id_usuario = (data.get("userId") or data.get("idUsuario") or None)
     descripcion = f"{sender_email or 'remitente_desconocido'} | {os.path.basename(excel_path)}"
-    id_encabezado = crear_encabezado(descripcion, id_usuario, total_registros)
+    id_encabezado = crear_encabezado(descripcion, id_usuario, total_registros, sender_email)
+    actualizar_estado_encabezado(id_encabezado, "EN_PROCESO")
 
     try:
         recipient_col = find_recipient_column(df)
         logger.info(f"📬 Columna destinatarios: '{recipient_col}'")
     except ValueError as ve:
         return JSONResponse({"error": str(ve), "columns": list(df.columns)}, status_code=400)
+    
+    # ✅ FASE 1: PRECARGAR TODO A BD (PENDIENTE) ANTES DE ENVIAR
+    for idx, row in df.iterrows():
+        row_dict = {str(k): ("" if pd.isna(v) else v) for k, v in row.to_dict().items()}
+        recipient = _norm(row_dict.get(recipient_col))
 
+        if recipient and (";" in recipient or "," in recipient):
+            recipient = _norm(re.split(r"[;,]", recipient)[0])
+
+        if not recipient:
+            continue
+
+        # Renderiza asunto y cuerpo igual que lo haces hoy
+        subject = personalize(subject_tmpl, row_dict)
+        final_body, _ = _compose_body_with_membrete(body_tmpl, row_dict)
+
+        # Serializa adjuntos (si quieres guardar los que aplican por fila)
+        # Si no quieres calcular adjuntos aquí, puedes guardar None
+        adjuntos_str = None
+
+        cedula = _pick_col_value(row_dict, {"cedula", "cédula", "identificacion", "documento", "dni", "cc"})
+        nombre_cliente = _pick_col_value(row_dict, {"nombre", "nombre_cliente", "cliente", "nombre del cliente"})
+        campana = _pick_col_value(row_dict, {"campaña", "campana", "campaign"})
+
+        # Inserta detalle PENDIENTE (solo BD, sin enviar)
+        registrar_detalle(
+            id_encabezado,
+            recipient,
+            subject,
+            final_body,
+            adjuntos_str,
+            cedula,
+            nombre_cliente,
+            campana
+        )
+
+    logger.info(f"📥 Precarga completada en BD para encabezado={id_encabezado}")
 
     # 1) intenta emparejar EMAIL_i/PASSWORD_i por senderEmail
     email_user, email_password = _resolve_email_password(sender_email)
@@ -591,6 +760,12 @@ def enviar_correos_masivos(data: dict):
     if not email_password:
         return JSONResponse({"error": f"Falta PASSWORD_i para '{email_user}' o PASSWORDNPL (fallback)"}, status_code=500)
     
+    if not _after_send_start():
+        return JSONResponse({
+            "message": "Aún no son las 07:00. Queda en cola y se retomará automáticamente desde las 07:00.",
+            "idEncabezado": id_encabezado
+        }, status_code=200)
+    
     # ── Parámetros de lote/keepalive
     BATCH_SIZE = int(os.getenv("EMAIL_SMTP_BATCH_SIZE", "75"))      # 50–100 recomendado
     NOOP_EVERY = int(os.getenv("EMAIL_SMTP_NOOP_EVERY", "15"))      # ping cada 10–20
@@ -600,7 +775,6 @@ def enviar_correos_masivos(data: dict):
         npl_user = os.getenv("REMITENTENPL") or ""
         if email_user and npl_user and email_user.lower() == npl_user.lower():
             t = _mk_smtp(smtp_server, smtp_port, npl_user, os.getenv("PASSWORDNPL"))
-            logger.info("Test SMTP NPL OK (autenticación)")
             _smtp_safe_quit(t)
     except Exception as e:
         logger.error(f"Test SMTP NPL FAIL: {e}")
@@ -634,41 +808,72 @@ def enviar_correos_masivos(data: dict):
 
     sent, errors = 0, []
 
-    # ── Envío principal protegido con finally para cerrar SMTP siempre
     try:
         block_sent = 0
-        for idx, row in df.iterrows():
-            row_dict = {str(k): ("" if pd.isna(v) else v) for k, v in row.to_dict().items()}
-            recipient = _norm(row_dict.get(recipient_col))
 
-            # Si la celda trae múltiples correos, usa el primero
-            if recipient and (";" in recipient or "," in recipient):
-                recipient = _norm(re.split(r"[;,]", recipient)[0])
+        enviados_hoy = contar_enviados_hoy_por_remitente(email_user)
 
-            if not recipient:
-                errors.append({"row": int(idx), "error": "Fila sin destinatario"})
-                continue
+        while True:
+            # 🔴 Si pausaron el encabezado, salimos para liberar worker (como ya lo hiciste)
+            estado = obtener_estado_encabezado(id_encabezado)
+            if estado == "PAUSADO":
+                print(f"⏸️ Envío PAUSADO para encabezado {id_encabezado}. Liberando worker...")
+                try:
+                    _smtp_safe_quit(server)
+                except Exception:
+                    pass
+                return JSONResponse({"message": "Proceso pausado por el usuario", "idEncabezado": id_encabezado}, status_code=200)
 
-            try:
-                # Subject y body personalizados
-                subject = personalize(subject_tmpl, row_dict)
+            if estado in ("CANCELADO", "CANCELADO_POR_USUARIO"):
+                logger.warning(f"🛑 Envío CANCELADO para encabezado {id_encabezado}")
+                try:
+                    cancelar_pendientes_por_encabezado(id_encabezado)
+                except Exception:
+                    pass
+                return JSONResponse({"message": "Proceso cancelado por el usuario", "idEncabezado": id_encabezado}, status_code=200)
 
-                msg = MIMEMultipart("related")
-                msg["From"] = email_user
-                if sender_email and sender_email.lower() != email_user.lower():
-                    msg["Reply-To"] = sender_email
-                msg["To"] = recipient
-                msg["Subject"] = Header(subject, "utf-8")
+            # Trae lista de pendientes (puedes optimizar a TOP 1 después)
+            pendientes = listar_pendientes_por_encabezado(id_encabezado)
+            if not pendientes:
+                break
 
-                alt = MIMEMultipart("alternative")
-                msg.attach(alt)
- 
-                final_body, is_html_final = _compose_body_with_membrete(body_tmpl, row_dict)
+            for p in pendientes:
+                id_detalle = p["idDetalle"]
+                recipient = _norm(p["email_destinatario"])
+                subject   = p["asunto"] or ""
+                final_body = p["cuerpo"] or ""
+                adjuntos_str = p.get("adjuntos")
 
-                plain_part = _html_to_plain(final_body) if is_html_final else final_body
-                alt.attach(MIMEText(plain_part, "plain", "utf-8"))
+                # LÍMITE DIARIO (ANTES DE ENVIAR ESTE CORREO)
+                if enviados_hoy >= MAX_DAILY_PER_ACCOUNT:
+                    logger.info(f"⛔ Límite diario alcanzado ({MAX_DAILY_PER_ACCOUNT}) para {email_user}. Continúa mañana desde las 07:00.")
+                    try:
+                        _smtp_safe_quit(server)
+                    except Exception:
+                        pass
+                    # NO PAUSAR. Queda EN_PROCESO con PENDIENTES.
+                    return JSONResponse({
+                        "message": "Límite diario alcanzado. Los pendientes se enviarán automáticamente mañana desde las 07:00.",
+                        "idEncabezado": id_encabezado,
+                        "sent_today": enviados_hoy,
+                        "limit": MAX_DAILY_PER_ACCOUNT
+                    }, status_code=200)
 
-                if is_html_final:
+                try:
+                    msg = MIMEMultipart("related")
+                    msg["From"] = email_user
+                    if sender_email and sender_email.lower() != email_user.lower():
+                        msg["Reply-To"] = sender_email
+                    msg["To"] = recipient
+                    msg["Subject"] = Header(subject, "utf-8")
+
+                    alt = MIMEMultipart("alternative")
+                    msg.attach(alt)
+
+                    # Como ya guardaste HTML final en BD, lo tratamos como HTML
+                    plain_part = _html_to_plain(final_body)
+                    alt.attach(MIMEText(plain_part, "plain", "utf-8"))
+
                     base_dir = str(Path(MEMBRETE_HTML_PATH).parent)
                     attach_dir = (os.getenv("EMAIL_ATTACH_DIR") or "").strip()
                     if attach_dir:
@@ -681,107 +886,73 @@ def enviar_correos_masivos(data: dict):
                     else:
                         html_with_cid = _inline_images_cid_on_msg(msg, final_body, base_dir)
                     alt.attach(MIMEText(html_with_cid, "html", "utf-8"))
-                else:
-                    alt.attach(MIMEText(final_body, "plain", "utf-8"))
-                # 1) Comunes
-                if common_ok and attachments_mode in ("common", "both"):
-                    attach_files(msg, common_ok)
 
-                # 2) Por persona (tokens desde Excel) + 3) PDF por patrón
-                row_attachments = []
-                if attachments_mode in ("row", "both"):
-                    row_attachments = resolve_row_attachments(row_dict, base_attach_dir, excel_dir)
+                    # Si guardaste adjuntos_str (JSON), aquí puedes re-adjuntar.
+                    # Si no, no adjuntas nada.
+                    # (para no inventar: lo dejamos sin adjuntos por ahora)
 
-                    if per_doc_pattern:
-                        per_doc_path = _resolve_per_doc_path_from_pattern(row_dict, per_doc_pattern, per_doc_folder)
-                        if per_doc_path:
-                            row_attachments.append(per_doc_path)
+                    # justo antes de _send_with_retry(...)
+                    if attachments_mode in ("common", "both") and common_ok:
+                        attach_files(msg, common_ok)
 
-                if row_attachments:
-                    ok_adj, fail_adj = attach_files(msg, row_attachments)
-                    if fail_adj:
-                        logger.warning(f"Adjuntos por fila NO encontrados (fila {int(idx)}): {fail_adj}")
+                    server, ok, err = _send_with_retry(server, _mk, msg, recipient, email_user, logger=logger, per_recipient_tries=2)
+                    if not ok:
+                        actualizar_estado_detalle(id_detalle, "ERROR", str(err))
+                        errors.append({"idDetalle": id_detalle, "to": recipient, "error": str(err)})
+                    else:
+                        actualizar_estado_detalle(id_detalle, "ENVIADO", None)
+                        marcar_fecha_envio_si_falta(id_detalle)   # para que cuente en el día
+                        enviados_hoy += 1                         # suma SOLO si fue efectivo
+                        sent += 1
+                        block_sent += 1
 
-                # --- Serializa adjuntos usados---
-                adjuntos_list = []
-                if common_ok and attachments_mode in ("common", "both"):
-                    adjuntos_list += list(common_ok)
-                if row_attachments:
-                    adjuntos_list += list(row_attachments)
-                adjuntos_str = json.dumps(adjuntos_list, ensure_ascii=False) if adjuntos_list else None
+                        if SLEEP_BETWEEN_MSGS > 0:
+                            time.sleep(SLEEP_BETWEEN_MSGS)
 
-                id_detalle = registrar_detalle(
-                    id_encabezado,   # el que creamos una sola vez
-                    recipient,       # email destinatario
-                    subject,         # asunto renderizado
-                    final_body,      # cuerpo final 
-                    adjuntos_str     # JSON de adjuntos usados
-                )
-                # Envío con reintento por destinatario (reconexión ante desconexión)
-                server, ok, err = _send_with_retry(
-                    server, _mk, msg, recipient, email_user, logger=logger, per_recipient_tries=2
-             )
-                if not ok:
-                    actualizar_estado_detalle(id_detalle, "ERROR", str(err))
-                    logger.error(f"Error enviando a {recipient}: {err}")
-                    errors.append({"row": int(idx), "to": recipient, "error": err})
-                else:
-                    actualizar_estado_detalle(id_detalle, "ENVIADO", None)
-                    logger.info(f"✅ Enviado a {recipient}")
-                    sent += 1
-                    block_sent += 1
-
-                    if SLEEP_BETWEEN_MSGS > 0:
-                        time.sleep(SLEEP_BETWEEN_MSGS)
-
-                    if RATE_BLOCK_SIZE > 0 and block_sent >= RATE_BLOCK_SIZE:
-                        logger.info(f"⏸️ Pausa anti-spam: {RATE_BLOCK_SLEEP}s tras {RATE_BLOCK_SIZE} envíos…")
-                        _smtp_safe_quit(server)       
-                        time.sleep(RATE_BLOCK_SLEEP)
-                        server = _mk()                   
-                        block_sent = 0
-
-
-                    # NOOP para mantener viva la sesión
-                    if NOOP_EVERY > 0 and (sent % NOOP_EVERY == 0):
-                        _smtp_noop(server, logger=logger)
-
-                    # Reconexión por lote + pausa
-                    if BATCH_SIZE > 0 and (sent % BATCH_SIZE == 0):
-                        logger.info(
-                            f"Lote de {BATCH_SIZE} completado. Re-conectando y durmiendo {SLEEP_BETWEEN_BATCH}s…"
-                        )
-                        _smtp_safe_quit(server)
-                        time.sleep(SLEEP_BETWEEN_BATCH)
-                        try:
+                        if RATE_BLOCK_SIZE > 0 and block_sent >= RATE_BLOCK_SIZE:
+                            logger.info(f"⏸️ Pausa anti-spam: {RATE_BLOCK_SLEEP}s tras {RATE_BLOCK_SIZE} envíos…")
+                            _smtp_safe_quit(server)
+                            time.sleep(RATE_BLOCK_SLEEP)
                             server = _mk()
-                        except Exception as e:
-                            logger.error(f"No se pudo re-conectar tras lote: {e}")
+                            block_sent = 0
 
-            except Exception as e:
-                logger.error(f"Error enviando a {recipient}: {e}")
-                errors.append({"row": int(idx), "to": recipient, "error": str(e)})
+                        if NOOP_EVERY > 0 and (sent % NOOP_EVERY == 0):
+                            _smtp_noop(server, logger=logger)
 
-        # Respuesta final
+                        if BATCH_SIZE > 0 and (sent % BATCH_SIZE == 0):
+                            logger.info(f"Lote {BATCH_SIZE} completado. Reconectando…")
+                            _smtp_safe_quit(server)
+                            time.sleep(SLEEP_BETWEEN_BATCH)
+                            server = _mk()
+
+                except Exception as e:
+                    actualizar_estado_detalle(id_detalle, "ERROR", str(e))
+                    errors.append({"idDetalle": id_detalle, "to": recipient, "error": str(e)})
+
+        actualizar_estado_encabezado(id_encabezado, "FINALIZADO")
+
+        try:
+            correo_usuario = obtener_correo_usuario(id_usuario)
+            if correo_usuario:
+                _send_final_notification(
+                    email_user=email_user,
+                    email_password=email_password,
+                    to_addr=correo_usuario,
+                    descripcion=descripcion
+                )
+        except Exception as e:
+            logger.warning(f"No se pudo enviar correo de finalización: {e}")
+
+
+        # Termina normal
         return JSONResponse(
-            {
-                "message": "Proceso finalizado",
-                "excel": os.path.basename(excel_path),
-                "smtp": {"server": smtp_server, "port": smtp_port, "from": email_user},
-                "sent": sent,
-                "failed": len(errors),
-                "errors": errors[:200], 
-            },
-            status_code=200 if sent > 0 else 500,
+            {"message": "Proceso finalizado", "idEncabezado": id_encabezado, "sent": sent, "failed": len(errors), "errors": errors[:200]},
+            status_code=200 if sent > 0 else 500
         )
 
     finally:
-        try:
-            if 'id_encabezado' in locals() and id_encabezado:
-                finalizar_encabezado_si_completo(id_encabezado)
-        except Exception as e:
-            logger.warning(f"No se pudo finalizar encabezado {id_encabezado}: {e}")
         _smtp_safe_quit(server)
+
 
 
 def _quill_classes_to_inline(html: str) -> str:
@@ -876,3 +1047,216 @@ def generar_documentos_personalizados_zip(data: dict):
         tb = traceback.format_exc()
         logger.error(f"Error generando documentos: {e}\n{tb}")
         return None, str(e)
+
+def reanudar_envio_por_encabezado(id_encabezado: int, sender_email: str, user_id: int | None):
+    # Pasa a EN_PROCESO
+    actualizar_estado_encabezado(id_encabezado, "EN_PROCESO")
+
+    pendientes = listar_pendientes_por_encabezado(id_encabezado)
+    if not pendientes:
+        actualizar_estado_encabezado(id_encabezado, "FINALIZADO")
+        return {"message": "No hay pendientes", "idEncabezado": id_encabezado}
+
+    # 1) credenciales según senderEmail (igual que en enviar_correos_masivos)
+    email_user, email_password = _resolve_email_password(sender_email)
+
+    if not email_user or not email_password:
+        email_user = email_user or os.getenv("REMITENTENPL")
+        email_password = email_password or os.getenv("PASSWORDNPL")
+
+    smtp_server = os.getenv("SERVER", "smtp.office365.com")
+    smtp_port = int(os.getenv("PORT", "587"))
+
+    if not sender_email:
+        return JSONResponse({"error": "Debe enviar senderEmail"}, status_code=400)
+    if not email_user:
+        return JSONResponse(
+            {"error": f"senderEmail '{sender_email}' no está configurado (EMAIL_i) y no hay fallback REMITENTENPL"},
+            status_code=500
+        )
+    if not email_password:
+        return JSONResponse({"error": f"Falta PASSWORD_i para '{email_user}' o PASSWORDNPL (fallback)"}, status_code=500)
+
+    # Parámetros
+    NOOP_EVERY = int(os.getenv("EMAIL_SMTP_NOOP_EVERY", "15"))
+    SLEEP_BETWEEN_MSGS = float(os.getenv("EMAIL_SMTP_SLEEP_PER_MSG", "0.2"))
+
+    # ✅ No enviar antes de las 07:00
+    if not _after_send_start():
+        return JSONResponse({
+            "message": "Aún no son las 07:00. Se retomará automáticamente desde las 07:00.",
+            "idEncabezado": id_encabezado
+        }, status_code=200)
+
+
+    # ✅ Conteo efectivo del día (solo ENVIADO cuenta)
+    enviados_hoy = contar_enviados_hoy_por_remitente(email_user)
+
+    # Conecta SMTP
+    try:
+        server = _mk_smtp(smtp_server, smtp_port, email_user, email_password, timeout=120)
+        server.set_debuglevel(1)
+        logger.info(f"Conexión SMTP OK (resume). encabezado={id_encabezado}")
+    except Exception as e:
+        logger.error(f"Error SMTP (resume): {e}")
+        return JSONResponse({"error": f"Error SMTP: {e}"}, status_code=500)
+
+    base_dir = str(Path(MEMBRETE_HTML_PATH).parent)
+    attach_dir = (os.getenv("EMAIL_ATTACH_DIR") or "").strip()
+
+    sent = 0
+    errors = 0
+    try:
+        while True:
+            estado = obtener_estado_encabezado(id_encabezado)
+
+            if estado == "PAUSADO":
+                logger.info(f"⏸️ Resume detenido: encabezado {id_encabezado} quedó PAUSADO.")
+                try:
+                    _smtp_safe_quit(server)
+                except Exception:
+                    pass
+                return {"message": "Proceso pausado por el usuario", "idEncabezado": id_encabezado}
+
+            if estado in ("CANCELADO", "CANCELADO_POR_USUARIO"):
+                logger.warning(f"🛑 Resume detenido: encabezado {id_encabezado} CANCELADO.")
+                try:
+                    cancelar_pendientes_por_encabezado(id_encabezado)
+                except Exception:
+                    pass
+                return {"message": "Proceso cancelado por el usuario", "idEncabezado": id_encabezado}
+
+            pendientes = listar_pendientes_por_encabezado(id_encabezado)
+            if not pendientes:
+                break
+
+            for p in pendientes:
+                id_detalle = p["idDetalle"]
+                recipient = _norm(p.get("email_destinatario") or "")
+                subject = p.get("asunto") or ""
+                final_body = p.get("cuerpo") or ""
+
+                if not recipient:
+                    try:
+                        actualizar_estado_detalle(id_detalle, "ERROR", "Sin email_destinatario")
+                    except Exception:
+                        pass
+                    errors += 1
+                    continue
+
+                # ✅ LÍMITE DIARIO (ANTES DE ENVIAR ESTE CORREO)
+                if enviados_hoy >= MAX_DAILY_PER_ACCOUNT:
+                    logger.info(f"⛔ Límite diario alcanzado ({MAX_DAILY_PER_ACCOUNT}) para {email_user}. Continúa mañana desde las 07:00.")
+                    try:
+                        _smtp_safe_quit(server)
+                    except Exception:
+                        pass
+
+                    return {
+                        "message": "Límite diario alcanzado. Los pendientes continúan automáticamente mañana desde las 07:00.",
+                        "idEncabezado": id_encabezado,
+                        "sent_today": enviados_hoy,
+                        "limit": MAX_DAILY_PER_ACCOUNT
+                    }
+
+
+                try:
+                    msg = MIMEMultipart("related")
+                    msg["From"] = email_user
+                    if sender_email and sender_email.lower() != email_user.lower():
+                        msg["Reply-To"] = sender_email
+                    msg["To"] = recipient
+                    msg["Subject"] = Header(subject, "utf-8")
+
+                    alt = MIMEMultipart("alternative")
+                    msg.attach(alt)
+
+                    plain_part = _html_to_plain(final_body)
+                    alt.attach(MIMEText(plain_part, "plain", "utf-8"))
+
+                    # Inline imágenes (membrete / adjuntos dir)
+                    if attach_dir:
+                        def _inline_with_multi_base(m, html, bases):
+                            out = html
+                            for b in bases:
+                                out = _inline_images_cid_on_msg(m, out, b)
+                            return out
+                        html_with_cid = _inline_with_multi_base(msg, final_body, [base_dir, attach_dir])
+                    else:
+                        html_with_cid = _inline_images_cid_on_msg(msg, final_body, base_dir)
+
+                    alt.attach(MIMEText(html_with_cid, "html", "utf-8"))
+
+                    # Adjuntos por registro (si los guardaste en BD)
+                    adjuntos_str = p.get("adjuntos")
+                    if adjuntos_str:
+                        try:
+                            # soporta JSON lista o string simple
+                            files = json.loads(adjuntos_str) if isinstance(adjuntos_str, str) and adjuntos_str.strip().startswith("[") else adjuntos_str
+                            if isinstance(files, str):
+                                files = [x.strip() for x in re.split(r"[;,]", files) if x.strip()]
+                            if isinstance(files, list):
+                                # si vienen nombres, resuelve rutas con tu helper
+                                for fpath in resolve_attachments_paths(files):
+                                    attach_files(msg, [fpath])
+                        except Exception:
+                            # si falla parseo, no revientes el envío
+                            pass
+
+                    server.sendmail(email_user, [recipient], msg.as_string())
+
+                    actualizar_estado_detalle(id_detalle, "ENVIADO", None)
+                    marcar_fecha_envio_si_falta(id_detalle)
+                    enviados_hoy += 1
+                    sent += 1
+
+
+                    if NOOP_EVERY and (sent % NOOP_EVERY == 0):
+                        try:
+                            server.noop()
+                        except Exception:
+                            try:
+                                _smtp_safe_quit(server)
+                            except Exception:
+                                pass
+                            server = _mk_smtp(smtp_server, smtp_port, email_user, email_password, timeout=120)
+
+                    if SLEEP_BETWEEN_MSGS:
+                        time.sleep(SLEEP_BETWEEN_MSGS)
+
+                except Exception as e:
+                    errors += 1
+                    try:
+                        actualizar_estado_detalle(id_detalle, "ERROR", str(e))
+                    except Exception:
+                        pass
+
+        # Finaliza encabezado si ya no hay pendientes
+        try:
+            finalizar_encabezado_si_completo(id_encabezado)
+        except Exception:
+            pass
+
+        actualizar_estado_encabezado(id_encabezado, "FINALIZADO")
+
+        try:
+            correo_usuario = obtener_correo_usuario(user_id)
+            if correo_usuario:
+                _notify_uploader_simple(
+                    server=server,
+                    from_addr=email_user,
+                    to_addr=correo_usuario,
+                    descripcion=f"Reanudación envío #{id_encabezado}"
+                )
+        except Exception as e:
+            logger.warning(f"No se pudo enviar correo de finalización (resume): {e}")
+
+
+
+        return {"message": "Reanudación completada", "idEncabezado": id_encabezado, "sent": sent, "errors": errors}
+
+    finally:
+        try:
+            _smtp_safe_quit(server)
+        except Exception:
+            pass

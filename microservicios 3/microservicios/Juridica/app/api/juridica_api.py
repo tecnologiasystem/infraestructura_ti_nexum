@@ -77,8 +77,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCC()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "CC": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "CC": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -149,8 +149,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCRunt()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -218,8 +218,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCRues()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -307,8 +307,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCSimit()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -362,8 +362,8 @@ def get_radicado_aConsultar():
         resultado = obtener_automatizacionRadicadoVigilancia()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, fecha_ini, fecha_fin, radicado = resultado
-        return {"idEncabezado": id_enc, "fechaInicial": fecha_ini, "fechaFinal": fecha_fin, "radicado": radicado}
+        id_enc, fecha_ini, fecha_fin, radicado, correo = resultado
+        return {"idEncabezado": id_enc, "fechaInicial": fecha_ini, "fechaFinal": fecha_fin, "radicado": radicado, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -418,8 +418,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCCamaraComercio()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -454,7 +454,7 @@ def get_automatizaciones(
 #------------- JURIDICO----------------------------
 @router.get("/excel/plantilla", tags=["Excel"])
 async def descargar_plantilla():
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Plantilla\plantilla_juridico.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Juridico\Plantilla\plantilla_juridico.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -471,8 +471,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Juridico\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Juridico\Correos\Input"
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
 
@@ -537,7 +537,7 @@ async def guardar_excel(
 @router.get("/excel/listar", tags=["Excel"])
 async def listar_archivos_excel():
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Juridico\Datos\Output"
         archivos = [f for f in os.listdir(carpeta) if f.endswith(".xlsx") or f.endswith(".xls")]
         return {"archivos": archivos}
     except Exception as e:
@@ -548,7 +548,7 @@ async def listar_archivos_excel():
 @router.get("/excel/ver_json", tags=["Excel"])
 async def ver_contenido_excel_json(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Juridico\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
 
         if not os.path.exists(file_path):
@@ -565,7 +565,7 @@ async def ver_contenido_excel_json(nombre: str):
 @router.get("/excel/ver", tags=["Excel"])
 async def descargar_archivo_excel(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Juridico\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Juridico\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
@@ -709,8 +709,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCTyba()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -745,7 +745,7 @@ def get_automatizaciones(
 #------------- VIGENCIA----------------------------
 @router.get("/excel/plantillaVigencia", tags=["Excel"])
 async def descargar_plantilla():
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Plantilla\plantilla_vigencia.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Vigencia\Plantilla\plantilla_vigencia.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -762,8 +762,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Vigencia\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Vigencia\Correos\Input"
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
 
@@ -823,7 +823,7 @@ async def guardar_excel(
 @router.get("/excel/listar", tags=["Excel"])
 async def listar_archivos_excel():
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigencia\Datos\Output"
         archivos = [f for f in os.listdir(carpeta) if f.endswith(".xlsx") or f.endswith(".xls")]
         return {"archivos": archivos}
     except Exception as e:
@@ -834,7 +834,7 @@ async def listar_archivos_excel():
 @router.get("/excel/ver_json", tags=["Excel"])
 async def ver_contenido_excel_json(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigencia\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
 
         if not os.path.exists(file_path):
@@ -851,7 +851,7 @@ async def ver_contenido_excel_json(nombre: str):
 @router.get("/excel/ver", tags=["Excel"])
 async def descargar_archivo_excel(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigencia\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigencia\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})

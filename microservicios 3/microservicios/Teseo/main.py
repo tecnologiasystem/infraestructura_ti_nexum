@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.api.acuerdoPago_api import router as acuerdoPago_router
+from app.api.gestiones_api import router as gestiones_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(acuerdoPago_router, prefix="/acuerdoPago_api")
+app.include_router(gestiones_router, prefix="/gestiones_api")
 
 @app.get("/")
 async def read_root():

@@ -9,7 +9,7 @@ from app.Vigilancia.bll.vigilancia_bll import (
     procesar_archivo_excel,
     procesar_resultado_automatizacionVigilancia,
     ResultadoVigilanciaModel, enviar_correo_finalizacion_por_encabezado,
-    pausar_encabezado, reanudar_encabezado
+    pausar_encabezado, reanudar_encabezado, obtener_correoNotificacion
 )
 from app.Vigilancia.dal.vigilancia_dal import DetalleModel, EncabezadoModel, obtener_detalles_agrupados_Vigilancia, obtener_detalles_por_encabezado
 
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/excel/plantilla", tags=["Excel"])
 async def descargar_plantilla():
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Plantilla\plantilla_vigilancia.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Plantilla\plantilla_vigilancia.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -34,8 +34,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Correos\Input"
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
 
@@ -114,7 +114,7 @@ async def guardar_excel(
 @router.get("/excel/listar", tags=["Excel"])
 async def listar_archivos_excel():
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Datos\Output"
         archivos = [f for f in os.listdir(carpeta) if f.endswith(".xlsx") or f.endswith(".xls")]
         return {"archivos": archivos}
     except Exception as e:
@@ -125,7 +125,7 @@ async def listar_archivos_excel():
 @router.get("/excel/ver_json", tags=["Excel"])
 async def ver_contenido_excel_json(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
 
         if not os.path.exists(file_path):
@@ -142,7 +142,7 @@ async def ver_contenido_excel_json(nombre: str):
 @router.get("/excel/ver", tags=["Excel"])
 async def descargar_archivo_excel(nombre: str):
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Vigilancia Juridica\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Vigilancia Juridica\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
@@ -229,3 +229,17 @@ def api_reanudar_encabezado(id_encabezado: int):
     if not success:
         raise HTTPException(status_code=500, detail="No se pudo reanudar el encabezado")
     return {"success": True}
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+@router.get("/automatizacionVigilancia/correo", tags=["Vigilancia"])
+def get_radicado_correo():
+    try:
+        resultado = obtener_correoNotificacion()
+        if not resultado:
+            return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
+        id_enc, fechaCargue, correo = resultado
+        return {"idEncabezado": id_enc, "fechaCargue": fechaCargue, "correo": correo}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})

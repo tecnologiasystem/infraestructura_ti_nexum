@@ -8,7 +8,7 @@ from datetime import datetime
 from app.Rues.bll.rues_bll import (
     procesar_archivo_excel,
     procesar_resultado_automatizacionRues,
-    ResultadoRuesModel, enviar_correo_finalizacion_por_encabezado, pausar_encabezado, reanudar_encabezado
+    ResultadoRuesModel, enviar_correo_finalizacion_por_encabezado, pausar_encabezado, reanudar_encabezado, obtener_correoNotificacion
 )
 from app.Rues.dal.rues_dal import DetalleModel, EncabezadoModel, obtener_detalles_agrupados_Rues, obtener_detalles_por_encabezado
 
@@ -25,7 +25,7 @@ def descargar_plantilla():
     - Si existe, devuelve un FileResponse para que el cliente descargue la plantilla Excel.
     - El media_type es el MIME type para archivos Excel modernos (.xlsx).
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Rues\Plantilla\plantilla_rues.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Rues\Plantilla\plantilla_rues.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -69,8 +69,8 @@ async def guardar_excel(
         contents = await file.read()
 
         # Definición de rutas UNC donde se guardan los archivos cargados y resultados
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Rues\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Rues\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Rues\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Rues\Correos\Input"
 
         # Creación de carpetas si no existen para evitar errores al guardar archivos
         os.makedirs(ruta_input, exist_ok=True)
@@ -156,7 +156,7 @@ async def listar_archivos_excel():
     - En caso de error retorna un JSON con error 500.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Rues\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Rues\Datos\Output"
         archivos = [f for f in os.listdir(carpeta) if f.endswith(".xlsx") or f.endswith(".xls")]
         return {"archivos": archivos}
     except Exception as e:
@@ -176,7 +176,7 @@ async def ver_contenido_excel_json(nombre: str):
     - Maneja errores retornando 500 con el mensaje.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Rues\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Rues\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
 
         if not os.path.exists(file_path):
@@ -201,7 +201,7 @@ async def descargar_archivo_excel(nombre: str):
     - Maneja excepciones retornando error 500.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Rues\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Rues\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})
@@ -313,3 +313,17 @@ def api_reanudar_encabezado(id_encabezado: int):
     if not success:
         raise HTTPException(status_code=500, detail="No se pudo reanudar el encabezado")
     return {"success": True}
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+@router.get("/automatizacionRues/correo", tags=["Rues"])
+def get_correo():
+    try:
+        resultado = obtener_correoNotificacion()
+        if not resultado:
+            return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
+        id_enc, fechaCargue, correo = resultado
+        return {"idEncabezado": id_enc, "fechaCargue": fechaCargue, "correo": correo}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})

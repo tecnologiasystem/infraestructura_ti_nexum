@@ -98,7 +98,6 @@ def obtener_automatizacionWhatsApp(id_encabezado: int):
 
     return encabezado
 
-
 def obtener_automatizacionNumeroWhatsApp():
     filas, error = obtener_numero_aConsultarWhatsApp()
     if error:
@@ -109,12 +108,7 @@ def obtener_automatizacionNumeroWhatsApp():
 
 
 def procesar_archivo_excel(encabezado: EncabezadoModel) -> int:
-    print("🧪 NUMEROS DETECTADOS:")
-    for d in encabezado.detalles:
-        print(f" - {d.numero!r}")
-
     detalles_validos = [d for d in encabezado.detalles if d.numero and str(d.numero).strip()]
-    print(f"🔎 Detalles válidos encontrados: {len(detalles_validos)}")
     encabezado.totalRegistros = len(detalles_validos)
 
     idEncabezado = insertar_encabezado(encabezado)

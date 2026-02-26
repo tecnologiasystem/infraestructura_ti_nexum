@@ -255,9 +255,7 @@ def obtener_automatizacionRunt(id_encabezado: int):
                 "limitacionesPropiedad": row.limitacionesPropiedad,
                 "garantiasAFavorDe": row.garantiasAFavorDe
             })
-
     return encabezado
-
 
 def obtener_automatizacionCCRunt():
     """

@@ -241,7 +241,7 @@ def pop_dni_get(estado_from: Optional[str] = "PENDIENTE",
     return dni
 
 def obtener_registro(
-    *, solo_activos: bool = True, exige_estado: Optional[str] = "ACTIVO"
+    *, solo_activos: bool = True, exige_estado: Optional[str] = "PENDIENTE"
 ) -> Optional[Dict[str, Any]]:
     """
     Orquesta la operación y devuelve el registro actualizado,

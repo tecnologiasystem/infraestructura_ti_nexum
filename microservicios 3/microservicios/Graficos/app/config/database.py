@@ -12,7 +12,7 @@ def get_connectionGraficos():
         "SERVER=172.18.72.111,1433;"
         "DATABASE=NEXUM;"
         "UID=Analitica;"
-        "PWD=Bogotacolombia202020*;"
+        "PWD=Nuevanueva123;"
     )
     return conn
 

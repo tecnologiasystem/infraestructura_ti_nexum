@@ -24,7 +24,7 @@ async def descargar_plantilla():
     - Si no existe, retorna un error 404.
     - Si existe, retorna el archivo con tipo MIME para Excel, listo para descargar.
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Runt\Plantilla\plantilla_runt.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Runt\Plantilla\plantilla_runt.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -58,8 +58,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Runt\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Runt\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Runt\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Runt\Correos\Input"
 
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
@@ -148,7 +148,7 @@ async def listar_archivos_excel():
     - En caso de error, captura excepción y retorna error 500 con detalle.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Runt\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Runt\Datos\Output"
         archivos = [f for f in os.listdir(carpeta) if f.endswith(".xlsx") or f.endswith(".xls")]
         return {"archivos": archivos}
     except Exception as e:
@@ -167,7 +167,7 @@ async def ver_contenido_excel_json(nombre: str):
     - Captura y reporta errores con código 500.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Runt\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Runt\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
 
         if not os.path.exists(file_path):
@@ -191,7 +191,7 @@ async def descargar_archivo_excel(nombre: str):
     - Maneja excepciones y retorna error 500 si falla.
     """
     try:
-        carpeta = r"\\BITMXL94920DQ\Uipat Datos\Runt\Datos\Output"
+        carpeta = r"\\172.18.73.76\Uipat Datos\Runt\Datos\Output"
         file_path = os.path.join(carpeta, nombre)
         if not os.path.exists(file_path):
             return JSONResponse(status_code=404, content={"error": "Archivo no encontrado"})

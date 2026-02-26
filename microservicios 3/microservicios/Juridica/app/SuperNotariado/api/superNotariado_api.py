@@ -16,7 +16,7 @@ from app.SuperNotariado.bll.superNotariado_bll import (
     procesar_archivo_excel, 
     procesar_resultado_automatizacion,
     ResultadoModel, pausar_encabezado,
-    reanudar_encabezado
+    reanudar_encabezado, obtener_correoNotificacion
 )
 from app.SuperNotariado.dal.superNotariado_dal import DetalleModel, EncabezadoModel, obtener_detalles_agrupados, obtener_detalles_por_encabezado
 from app.SuperNotariado.bll.superNotariado_bll import cargar_usuarios_excel_desde_archivo, tomar_usuario_disponible
@@ -34,7 +34,7 @@ def descargar_plantilla():
     Si el archivo no existe, responde con error 404.
     Si existe, devuelve el archivo para descarga con el tipo MIME correcto.
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Super Notariado\Plantilla\plantilla_superNotariado.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Super Notariado\Plantilla\plantilla_superNotariado.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -67,8 +67,8 @@ async def guardar_excel(
         contents = await file.read()
 
         # Define rutas para entrada y salida en red
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Super Notariado\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Super Notariado\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Super Notariado\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Super Notariado\Correos\Input"
 
         # Crea carpetas si no existen
         os.makedirs(ruta_input, exist_ok=True)
@@ -155,7 +155,7 @@ async def descargar_pdf_por_cedula(Cedula: str = Query(...)):
     Si existe, devuelve el archivo con tipo media pdf.
     """
     try:
-        carpeta_pdf = r"\\BITMXL94920DQ\Uipat Datos\Super Notariado\Datos\Output\Descargas"
+        carpeta_pdf = r"\\172.18.73.76\Uipat Datos\Super Notariado\Datos\Output\Descargas"
         archivo_pdf = f"{Cedula}.pdf"
         ruta_pdf = os.path.join(carpeta_pdf, archivo_pdf)
 
@@ -273,7 +273,7 @@ def cargar_usuarios_excel():
     Llama a función que inserta datos en base.
     Retorna cantidad de registros insertados o error 500 si falla.
     """
-    ruta_excel = r"\\BITMXL94920DQ\Uipat Datos\Super Notariado\Correos\Output\Usuarios.xlsx"
+    ruta_excel = r"\\172.18.73.76\Uipat Datos\Super Notariado\Correos\Output\Usuarios.xlsx"
     success, resultado = cargar_usuarios_excel_desde_archivo(ruta_excel)
     if success:
         return {"success": True, "registros_insertados": resultado}
@@ -394,3 +394,17 @@ def api_reanudar_encabezado(id_encabezado: int):
     if not success:
         raise HTTPException(status_code=500, detail="No se pudo reanudar el encabezado")
     return {"success": True}
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+@router.get("/automatizacionSuperNotariado/correo", tags=["Super Notariado"])
+def get_correo():
+    try:
+        resultado = obtener_correoNotificacion()
+        if not resultado:
+            return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
+        id_enc, fechaCargue, correo = resultado
+        return {"idEncabezado": id_enc, "fechaCargue": fechaCargue, "correo": correo}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})

@@ -126,19 +126,25 @@ def obtener_CC_aConsultarNuevaEps():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT e.idEncabezado,
-             CAST(d.cedula AS VARCHAR(50)) AS cedula
-            FROM NuevaEpsEncabezado e
-            JOIN NuevaEpsDetalle d ON e.idEncabezado = d.idEncabezado
-            WHERE (d.nombre = '' OR d.nombre IS NULL)
-              AND e.idEncabezado = (
-                  SELECT TOP 1 e2.idEncabezado
-                  FROM NuevaEpsEncabezado e2
-                  JOIN NuevaEpsDetalle d2 ON e2.idEncabezado = d2.idEncabezado
-                  WHERE d2.nombre = '' OR d2.nombre IS NULL
-                  ORDER BY e2.idEncabezado ASC
-              )
-            ORDER BY NEWID()
+            ;WITH EncPendiente AS (
+        SELECT TOP 1 e.idEncabezado, e.idUsuario
+        FROM NEXUM.dbo.NuevaEpsEncabezado e
+        JOIN NEXUM.dbo.NuevaEpsDetalle d
+            ON e.idEncabezado = d.idEncabezado
+        WHERE (d.nombre = '' OR d.nombre IS NULL)
+        ORDER BY e.idEncabezado ASC
+    )
+    SELECT  
+        e.idEncabezado,
+        CAST(d.cedula AS VARCHAR(50)) AS cedula,
+        u.correo
+    FROM EncPendiente e
+    JOIN NEXUM.dbo.NuevaEpsDetalle d
+        ON d.idEncabezado = e.idEncabezado
+    LEFT JOIN NEXUM.dbo.UsuariosApp u
+        ON u.idUsuarioApp = e.idUsuario
+    WHERE (d.nombre = '' OR d.nombre IS NULL)
+    ORDER BY NEWID();
         """)
         return cursor.fetchall(), None
     except Exception as e:

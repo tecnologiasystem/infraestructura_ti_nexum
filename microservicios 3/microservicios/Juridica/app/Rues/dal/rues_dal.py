@@ -428,3 +428,30 @@ def reanudar_detalle_encabezado(id_encabezado: int) -> bool:
     finally:
         cur.close()
         conn.close()
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+def obtener_correo_notificacion():
+    conn = get_connection()
+    if conn is None:
+        return None, "Error al conectar con la base de datos"
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT TOP 1 
+        e.idEncabezado,
+        e.fechaCargue,
+        u.correo
+    FROM NEXUM.dbo.RuesEncabezado e
+    JOIN NEXUM.dbo.UsuariosApp u
+        ON u.idUsuarioApp = e.idUsuario
+    ORDER BY e.fechaCargue DESC;
+            """)
+        return cursor.fetchall(), None
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return None, f"Error al ejecutar SP: {e}"
+
+    finally:
+        cursor.close()
+        conn.close()

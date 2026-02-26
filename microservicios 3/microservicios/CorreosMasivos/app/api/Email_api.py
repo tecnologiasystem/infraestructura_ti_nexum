@@ -1,34 +1,59 @@
-from fastapi import APIRouter, Request, Body
+from fastapi import APIRouter, Request, Body, Response
 from fastapi import HTTPException, Query
 from fastapi.responses import JSONResponse
-from app.bll.Email_bll import enviar_correos_masivos, generar_documentos_personalizados_zip
+from app.bll.Email_bll import enviar_correos_masivos, generar_documentos_personalizados_zip, reanudar_envio_por_encabezado
+import pandas as pd
+from fastapi.responses import StreamingResponse
+from app.core.emailclick_queue import EmailQueue
 import json
-from app.dal.Email_dal import listar_encabezados, listar_detalles_por_encabezado
-from fastapi.encoders import jsonable_encoder
+from app.dal.Email_dal import actualizar_estado_encabezado, pausar_pendientes_por_encabezado, reanudar_pausados_por_encabezado
 
 router = APIRouter()
 
+email_queue = EmailQueue()
+
+def _handler_email(payload: dict) -> dict:
+    action = (payload.get("action") or "").lower().strip()
+
+    # ✅ Resume desde BD
+    if action == "resume":
+        return reanudar_envio_por_encabezado(
+            id_encabezado=payload.get("idEncabezado"),
+            sender_email=payload.get("senderEmail"),
+            user_id=payload.get("idUsuario") or payload.get("userId"),
+        )
+
+    # ✅ Envío nuevo
+    result = enviar_correos_masivos(payload)
+
+    if isinstance(result, JSONResponse):
+        try:
+            return json.loads(result.body.decode("utf-8"))
+        except Exception:
+            return {"raw": result.body.decode("utf-8", errors="ignore")}
+
+    return result if isinstance(result, dict) else {"result": str(result)}
+
 @router.post('/EmailMasivo')
-async def email_masivo(payload: dict | None = Body(default=None) ):
+async def email_masivo(payload: dict | None = Body(default=None)):
     try:
         data = payload
         if data is None:
-            try:
-                body_text = None
-                async def _read_body(req: Request):
-                    nonlocal body_text
-                    body_bytes = await req.body()
-                    body_text = body_bytes.decode('utf-8', errors='ignore').strip()
-                    return body_text
-            except NameError:
-                pass
-        if data is None:
             return JSONResponse({"error": "Body vacío o no-JSON. Enviar application/json con el payload."}, status_code=400)
-        print("📥 Datos recibidos en FastAPI:", data)
-        result = enviar_correos_masivos(data)
-        if isinstance(result, JSONResponse):
-            return result
-        return JSONResponse(content=result)
+
+        print("📥 Datos recibidos en FastAPI (encolado):", data)
+
+        job_id = email_queue.enqueue(data)
+
+        return JSONResponse(
+            content={
+                "message": "Base cargada correctamente. Correos enviándose",
+                "job_id": job_id,
+                "status_url": f"/EmailMasivo/status/{job_id}"
+            },
+            status_code=202
+        )
+
     except Exception as e:
         print(f"❌ Error en /EmailMasivo: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -55,18 +80,26 @@ async def generar_docs_pdf(payload: dict = Body(...)):
     except Exception as e:
       return JSONResponse({"error": str(e)}, status_code=500)
     
-@router.get("/EmailEnvios/Encabezados")
-async def email_encabezados():
-    try:
-        data = listar_encabezados()
-        return JSONResponse(content=jsonable_encoder({"data": data}))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.get("/EmailMasivo/status/{job_id}")
+async def email_masivo_status(job_id: str):
+    return JSONResponse(content=email_queue.get_status(job_id))
 
-@router.get("/EmailEnvios/Detalle")
-async def email_detalle(idEncabezado: int = Query(...)):
-    try:
-        data = listar_detalles_por_encabezado(idEncabezado)
-        return JSONResponse(content=jsonable_encoder({"data": data}))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/EmailEnvios/Reanudar/{id_encabezado}")
+def reanudar(id_encabezado: int, payload: dict = Body(...)):
+    actualizar_estado_encabezado(id_encabezado, "EN_PROCESO")
+
+    job_id = email_queue.enqueue({
+        "action": "resume",
+        "idEncabezado": id_encabezado,
+        "senderEmail": payload.get("senderEmail"),
+        "idUsuario": payload.get("idUsuario") or payload.get("userId"),
+        "attachments": payload.get("attachments") or [],
+        "attachmentsMode": payload.get("attachmentsMode") or "both",
+    })
+    return {"ok": True, "estado": "EN_PROCESO", "job_id": job_id}
+
+@router.post("/EmailEnvios/Pausar/{id_encabezado}")
+def pausar(id_encabezado: int):
+    actualizar_estado_encabezado(id_encabezado, "PAUSADO")
+    pausar_pendientes_por_encabezado(id_encabezado)
+    return {"ok": True, "estado": "PAUSADO"}

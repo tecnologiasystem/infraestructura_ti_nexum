@@ -126,20 +126,25 @@ def obtener_CC_aConsultarFamiSanar():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT 
-              e.idEncabezado,
-              CAST(d.cedula AS VARCHAR(50)) AS cedula
-            FROM FamiSanarEncabezado e
-            JOIN FamiSanarDetalle d ON e.idEncabezado = d.idEncabezado
+            ;WITH EncPendiente AS (
+                SELECT TOP 1 e.idEncabezado, e.idUsuario
+                FROM NEXUM.dbo.FamiSanarEncabezado e
+                JOIN NEXUM.dbo.FamiSanarDetalle d
+                    ON e.idEncabezado = d.idEncabezado
+                WHERE (d.nombres = '' OR d.nombres IS NULL)
+                ORDER BY e.idEncabezado ASC
+            )
+            SELECT  
+                e.idEncabezado,
+                CAST(d.cedula AS VARCHAR(50)) AS cedula,
+                u.correo
+            FROM EncPendiente e
+            JOIN NEXUM.dbo.FamiSanarDetalle d
+                ON d.idEncabezado = e.idEncabezado
+            LEFT JOIN NEXUM.dbo.UsuariosApp u
+                ON u.idUsuarioApp = e.idUsuario
             WHERE (d.nombres = '' OR d.nombres IS NULL)
-              AND e.idEncabezado = (
-                  SELECT TOP 1 e2.idEncabezado
-                  FROM FamiSanarEncabezado e2
-                  JOIN FamiSanarDetalle d2 ON e2.idEncabezado = d2.idEncabezado
-                  WHERE d2.nombres = '' OR d2.nombres IS NULL
-                  ORDER BY e2.idEncabezado ASC
-              )
-            ORDER BY NEWID()
+            ORDER BY NEWID();
         """)
         return cursor.fetchall(), None
     except Exception as e:
@@ -771,3 +776,30 @@ def obtener_encabezados_paginado_famisanar(offset: int, limit: int):
         return cursor.fetchall()
     finally:
         cursor.close(); conn.close()
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+def obtener_correo_notificacion():
+    conn = get_connection()
+    if conn is None:
+        return None, "Error al conectar con la base de datos"
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT TOP 1 
+        e.idEncabezado,
+        e.fechaCargue,
+        u.correo
+    FROM NEXUM.dbo.FamisanarEncabezado e
+    JOIN NEXUM.dbo.UsuariosApp u
+        ON u.idUsuarioApp = e.idUsuario
+    ORDER BY e.fechaCargue DESC;
+            """)
+        return cursor.fetchall(), None
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return None, f"Error al ejecutar SP: {e}"
+
+    finally:
+        cursor.close()
+        conn.close()

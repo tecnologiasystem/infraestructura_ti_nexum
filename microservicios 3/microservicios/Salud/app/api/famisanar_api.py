@@ -7,7 +7,7 @@ Se integran modelos Pydantic para validación, y la lógica de negocio se delega
 
 from fastapi import APIRouter, UploadFile, File, Query, HTTPException, Form, Request, Body, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
-from app.bll.famisanar_bll import procesar_archivo_excel_background 
+from app.bll.famisanar_bll import procesar_archivo_excel_background
 import pandas as pd
 from io import BytesIO
 import os
@@ -24,7 +24,7 @@ from app.bll.famisanar_bll import (
     listar_automatizaciones_estadoFamiSanar,
     obtener_automatizacionFamiSanar, enviar_correo_finalizacion_por_encabezado,
     pausar_encabezado,reanudar_encabezado, listar_detalles_por_encabezado_paginadoBLL,
-    resumen_encabezadoBLL, listar_encabezados_paginado_famisanar_bll
+    resumen_encabezadoBLL, listar_encabezados_paginado_famisanar_bll, obtener_correoNotificacion
 )
 
 from app.dal.famisanar_dal import DetalleModel, EncabezadoModel, obtener_detalles_agrupados_FamiSanar, obtener_detalles_por_encabezado
@@ -53,8 +53,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCFamiSanar()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -67,7 +67,7 @@ def descargar_plantilla():
     Permite descargar la plantilla Excel estándar para el proceso FamiSanar.
     Valida existencia del archivo antes de devolverlo.
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\FamiSanar\Plantilla\plantilla_famisanar.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\FamiSanar\Plantilla\plantilla_famisanar.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -93,8 +93,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\FamiSanar\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\FamiSanar\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\FamiSanar\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\FamiSanar\Correos\Input"
 
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
@@ -288,3 +288,17 @@ def get_automatizaciones(
     if offset is None or limit is None:
         return listar_automatizaciones_estadoFamiSanar()
     return listar_encabezados_paginado_famisanar_bll(offset, limit)
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+@router.get("/automatizacionFamiSanar/correo", tags=["FamiSanar"])
+def get_correo():
+    try:
+        resultado = obtener_correoNotificacion()
+        if not resultado:
+            return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
+        id_enc, fechaCargue, correo = resultado
+        return {"idEncabezado": id_enc, "fechaCargue": fechaCargue, "correo": correo}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})

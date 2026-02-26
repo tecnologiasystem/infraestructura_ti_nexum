@@ -70,8 +70,8 @@ def get_CC_aConsultar():
         resultado = obtener_automatizacionCCNuevaEps()
         if not resultado:
             return JSONResponse(status_code=404, content={"error": "No hay cédulas disponibles"})
-        id_enc, cedula = resultado
-        return {"idEncabezado": id_enc, "cedula": cedula}
+        id_enc, cedula, correo = resultado
+        return {"idEncabezado": id_enc, "cedula": cedula, "correo": correo}
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -84,7 +84,7 @@ def descargar_plantilla():
     Permite descargar la plantilla Excel para Nueva Eps.
     Verifica existencia antes de enviar.
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\NuevaEps\Plantilla\plantilla_nuevaEps.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\NuevaEps\Plantilla\plantilla_nuevaEps.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -107,8 +107,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\NuevaEps\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\NuevaEps\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\NuevaEps\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\NuevaEps\Correos\Input"
 
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)

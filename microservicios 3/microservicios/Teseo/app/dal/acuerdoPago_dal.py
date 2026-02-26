@@ -123,7 +123,7 @@ def pop_dni(estado_from: Optional[str] = "PENDIENTE",
     
     
 def pop_acuerdo(
-    *, solo_activos: bool = True, exige_estado: Optional[str] = "ACTIVO"
+    *, solo_activos: bool = True, exige_estado: Optional[str] = "PENDIENTE"
 ) -> Optional[Dict[str, Any]]:
     """
     ATÓMICO: toma TOP 1 con enviada pendiente (ISNULL(enviada,0)=0),
@@ -144,7 +144,7 @@ def pop_acuerdo(
     sql = f"""
     ;WITH cte AS (
         SELECT TOP 1 ap.id
-        FROM turnosvirtuales_dev.dbo.acuerdos_pago ap WITH (ROWLOCK, READPAST, UPDLOCK)
+        FROM [Natalia-Whatsapp].[dbo].[AcuerdosPago] ap WITH (ROWLOCK, READPAST, UPDLOCK)
         WHERE {where_clause}
         ORDER BY NEWID()
     )
@@ -168,7 +168,7 @@ def pop_acuerdo(
         inserted.observaciones,
         inserted.created_at,
         inserted.updated_at
-    FROM turnosvirtuales_dev.dbo.acuerdos_pago ap
+    FROM [Natalia-Whatsapp].[dbo].[AcuerdosPago] ap
     INNER JOIN cte ON cte.id = ap.id;
     """
 

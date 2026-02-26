@@ -19,7 +19,7 @@ from app.dal.famisanar_dal import (
     correo_ya_enviado, marcar_correo_enviado, marcar_pausa_encabezado, pausar_detalle_encabezado,
     quitar_pausa_encabezado, reanudar_detalle_encabezado, contar_detalles_por_encabezado, obtener_detalles_por_encabezado_paginado,
     contar_total_por_encabezado, contar_procesados_por_encabezado, obtener_encabezados_paginado_famisanar,
-    contar_encabezados_famisanar
+    contar_encabezados_famisanar, obtener_correo_notificacion
 )
 import pandas as pd
 import smtplib
@@ -326,3 +326,12 @@ def listar_encabezados_paginado_famisanar_bll(offset: int, limit: int):
 
     total_enc = contar_encabezados_famisanar()
     return {"rows": resultados, "total": total_enc}
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+def obtener_correoNotificacion():
+    filas, error = obtener_correo_notificacion()
+    if error:
+        raise Exception(f"Error al consultar próximo radicado: {error}")
+    if not filas:
+        return None
+    return filas[0]

@@ -13,7 +13,8 @@ from app.Rues.dal.rues_dal import (
     marcar_pausa_encabezado,
     pausar_detalle_encabezado,
     quitar_pausa_encabezado,
-    reanudar_detalle_encabezado
+    reanudar_detalle_encabezado,
+    obtener_correo_notificacion
 )
 import pandas as pd
 import smtplib
@@ -148,3 +149,16 @@ def reanudar_encabezado(id_encabezado: int) -> bool:
     ok1 = quitar_pausa_encabezado(id_encabezado)
     ok2 = reanudar_detalle_encabezado(id_encabezado)
     return ok1 and ok2
+
+#--------- GET PARA NOTIFICACIONES ---------------------------------------------
+def obtener_correoNotificacion():
+    """
+    Retorna la siguiente tupla (radicado, fechaInicial, fechaFinal) pendiente.
+    Lanza excepción si hay un error, o devuelve None si no hay más radicados.
+    """
+    filas, error = obtener_correo_notificacion()
+    if error:
+        raise Exception(f"Error al consultar próximo radicado: {error}")
+    if not filas:
+        return None
+    return filas[0]

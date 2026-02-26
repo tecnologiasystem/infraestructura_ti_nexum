@@ -55,7 +55,7 @@ def descargar_plantilla():
     Permite descargar la plantilla Excel estándar para el proceso WhatsApp.
     Valida existencia del archivo antes de devolverlo.
     """
-    plantilla_path = r"\\BITMXL94920DQ\Uipat Datos\Mensajes WhatsApp\Plantilla\plantilla_Mensajes_WhatsApp.xlsx"
+    plantilla_path = r"\\172.18.73.76\Uipat Datos\Mensajes WhatsApp\Plantilla\plantilla_Mensajes_WhatsApp.xlsx"
     if not os.path.exists(plantilla_path):
         return JSONResponse(status_code=404, content={"error": "Plantilla no encontrada"})
     return FileResponse(
@@ -79,8 +79,8 @@ async def guardar_excel(
     try:
         contents = await file.read()
 
-        ruta_input = r"\\BITMXL94920DQ\Uipat Datos\Mensajes WhatsApp\Datos\Input"
-        ruta_output = r"\\BITMXL94920DQ\Uipat Datos\Mensajes WhatsApp\Correos\Input"
+        ruta_input = r"\\172.18.73.76\Uipat Datos\Mensajes WhatsApp\Datos\Input"
+        ruta_output = r"\\172.18.73.76\Uipat Datos\Mensajes WhatsApp\Correos\Input"
 
         os.makedirs(ruta_input, exist_ok=True)
         os.makedirs(ruta_output, exist_ok=True)
